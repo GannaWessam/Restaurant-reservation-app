@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/restaurant_model.dart';
 import 'table_selection_screen.dart';
+import 'my_reservations_screen.dart';
 
 class RestaurantDetailScreen extends StatefulWidget {
   const RestaurantDetailScreen({super.key});
@@ -61,17 +62,85 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      restaurant.isFavorite ? Icons.star : Icons.star_border,
-                      color: restaurant.isFavorite ? Colors.amber : Theme.of(context).colorScheme.secondary,
-                      size: 28,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        restaurant.isFavorite = !restaurant.isFavorite;
-                      });
-                    },
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          restaurant.isFavorite ? Icons.star : Icons.star_border,
+                          color: restaurant.isFavorite ? Colors.amber : Theme.of(context).colorScheme.secondary,
+                          size: 28,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            restaurant.isFavorite = !restaurant.isFavorite;
+                          });
+                        },
+                      ),
+                      PopupMenuButton<String>(
+                        offset: const Offset(0, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        onSelected: (value) {
+                          if (value == 'reservations') {
+                            // Navigate to my reservations screen
+                            Get.to(() => const MyReservationsScreen());
+                          } else if (value == 'signout') {
+                            // Sign out
+                            Get.offAllNamed('/login');
+                          }
+                        },
+                        itemBuilder: (BuildContext context) => [
+                          PopupMenuItem<String>(
+                            value: 'reservations',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  color: Theme.of(context).colorScheme.secondary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'My Reservations',
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'signout',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.logout,
+                                  color: Colors.red[600],
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Sign Out',
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.red[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Theme.of(context).primaryColor,
+                          child: const Icon(Icons.person, color: Colors.white, size: 20),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

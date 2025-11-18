@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/restaurant_model.dart';
+import '../models/reservation_model.dart';
+import '../services/reservation_service.dart';
 
 class TableSelectionScreen extends StatefulWidget {
   const TableSelectionScreen({super.key});
@@ -12,6 +14,7 @@ class TableSelectionScreen extends StatefulWidget {
 
 class _TableSelectionScreenState extends State<TableSelectionScreen> {
   final Set<int> selectedChairs = {};
+  final ReservationService _reservationService = ReservationService();
 
   // Table and chair layout
   final List<Map<String, dynamic>> tables = [
@@ -520,6 +523,20 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
           ),
           ElevatedButton(
             onPressed: () {
+              // Create and save reservation
+              final reservation = ReservationModel(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                restaurantName: restaurant.name,
+                restaurantCategory: restaurant.category,
+                timeSlot: timeSlot,
+                seatCount: seatCount,
+                seatIds: selectedChairs.toList()..sort(),
+                reservationDate: DateTime.now(),
+                restaurantImage: restaurant.imagePath,
+              );
+              
+              _reservationService.addReservation(reservation);
+              
               Get.back();
               Get.back();
               Get.back();
