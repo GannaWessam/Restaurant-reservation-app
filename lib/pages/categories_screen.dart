@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'my_reservations_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -57,14 +58,67 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         ),
                       ],
                     ),
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: Theme.of(context).primaryColor,
-                      child: IconButton(
-                        icon: const Icon(Icons.person, color: Colors.white),
-                        onPressed: () {
+                    PopupMenuButton<String>(
+                      offset: const Offset(0, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      onSelected: (value) {
+                        if (value == 'reservations') {
+                          // Navigate to my reservations screen
+                          Get.to(() => const MyReservationsScreen());
+                        } else if (value == 'signout') {
+                          // Sign out
                           Get.offAllNamed('/login');
-                        },
+                        }
+                      },
+                      itemBuilder: (BuildContext context) => [
+                        PopupMenuItem<String>(
+                          value: 'reservations',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: Theme.of(context).colorScheme.secondary,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'My Reservations',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'signout',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.logout,
+                                color: Colors.red[600],
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Sign Out',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.red[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      child: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Theme.of(context).primaryColor,
+                        child: const Icon(Icons.person, color: Colors.white),
                       ),
                     ),
                   ],
