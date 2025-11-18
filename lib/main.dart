@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:restaurant_reservation_app/controllers/auth_controller.dart';
+import 'package:restaurant_reservation_app/services/auth_service.dart';
+import 'package:restaurant_reservation_app/db/reservations_crud.dart';
+import 'package:restaurant_reservation_app/db/restaurant_crud.dart';
+import 'package:restaurant_reservation_app/db/db_instance.dart';
 // import 'package:firebase_core/firebase_core.dart';
 // import 'firebase_options.dart';
 
@@ -10,8 +15,6 @@ import 'pages/register_screen.dart';
 import 'pages/categories_screen.dart';
 import 'pages/restaurants_list_screen.dart';
 
-// Import bindings
-import 'bindings/auth_binding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +24,12 @@ void main() async {
   //   options: DefaultFirebaseOptions.currentPlatform,
   // );
 
+  // Register services as permanent dependencies
+  // Register CloudDb first since ReservationsCrud and RestaurantCrud depend on it
+  Get.put(CloudDb(), permanent: true);
+  Get.put(AuthService(), permanent: true);
+  Get.put(ReservationsCrud(), permanent: true);
+  Get.put(RestaurantCrud(), permanent: true);
   runApp(const MyApp());
 }
 
@@ -44,13 +53,17 @@ class MyApp extends StatelessWidget {
         ),
         GetPage(
           name: '/login',
-          page: () => const LoginScreen(),
-          binding: AuthBinding(),
+          page: () => LoginScreen(),
+          binding: BindingsBuilder(() {
+            Get.lazyPut(() => AuthController());
+          }),
         ),
         GetPage(
           name: '/register',
-          page: () => const RegisterScreen(),
-          binding: AuthBinding(),
+          page: () => RegisterScreen(),
+          binding: BindingsBuilder(() {
+            Get.lazyPut(() => AuthController());
+          }),
         ),
         GetPage(
           name: '/home',

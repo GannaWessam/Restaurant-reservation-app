@@ -41,7 +41,7 @@ dependencies:
   get: ^4.6.6
 
   # Firebase
-  firebase_auth: ^5.3.1
+  firebase_auth: ^6.1.2
 
   # Google Fonts (for Arabic fonts)
   google_fonts: ^6.1.0
