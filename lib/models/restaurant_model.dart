@@ -8,7 +8,8 @@ class RestaurantModel {
   final double rating;
   final String tables;
   final String? imagePath;
-  bool isFavorite;
+  final String? description;
+  final List<String> timeSlots;
 
   RestaurantModel({
     required this.id,
@@ -18,7 +19,8 @@ class RestaurantModel {
     required this.rating,
     required this.tables,
     this.imagePath,
-    this.isFavorite = false,
+    this.description,
+    required this.timeSlots,
   });
 
   // Convert RestaurantModel to JSON
@@ -31,21 +33,25 @@ class RestaurantModel {
       'rating': rating,
       'tables': tables,
       'imagePath': imagePath,
-      'isFavorite': isFavorite,
+      'description': description,
+      'timeSlots': timeSlots,
     };
   }
 
   // Create RestaurantModel from JSON
   factory RestaurantModel.fromJson(Map<String, dynamic> json) {
     return RestaurantModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      category: json['category'] as String,
-      distance: json['distance'] as String,
-      rating: (json['rating'] as num).toDouble(),
-      tables: json['tables'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      category: json['category'] as String? ?? '',
+      distance: json['distance'] as String? ?? 'Unknown distance',
+      rating: (json['rating'] as num? ?? 0).toDouble(),
+      tables: json['tables'] as String? ?? '0 tables',
       imagePath: json['imagePath'] as String?,
-      isFavorite: json['isFavorite'] as bool? ?? false,
+      description: json['description'] as String?,
+      timeSlots: json['timeSlots'] != null 
+          ? List<String>.from(json['timeSlots'])
+          : ['7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM'],
     );
   }
 
@@ -58,7 +64,8 @@ class RestaurantModel {
     double? rating,
     String? tables,
     String? imagePath,
-    bool? isFavorite,
+    String? description,
+    List<String>? timeSlots,
   }) {
     return RestaurantModel(
       id: id ?? this.id,
@@ -68,7 +75,8 @@ class RestaurantModel {
       rating: rating ?? this.rating,
       tables: tables ?? this.tables,
       imagePath: imagePath ?? this.imagePath,
-      isFavorite: isFavorite ?? this.isFavorite,
+      description: description ?? this.description,
+      timeSlots: timeSlots ?? this.timeSlots,
     );
   }
 }

@@ -2,32 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/restaurant_model.dart';
+import '../controllers/restaurant_detail_controller.dart';
+import '../controllers/favorites_controller.dart';
 import 'table_selection_screen.dart';
 import 'my_reservations_screen.dart';
 
-class RestaurantDetailScreen extends StatefulWidget {
+class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
   const RestaurantDetailScreen({super.key});
-
-  @override
-  State<RestaurantDetailScreen> createState() => _RestaurantDetailScreenState();
-}
-
-class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
-  String? selectedTimeSlot;
-  
-  // Available time slots
-  final List<String> timeSlots = [
-    '7:00 AM',
-    '8:00 AM',
-    '9:00 AM',
-    '10:00 AM',
-    '11:00 AM',
-  ];
 
   @override
   Widget build(BuildContext context) {
     // Get restaurant from navigation arguments
     final RestaurantModel restaurant = Get.arguments as RestaurantModel;
+    final favoritesController = Get.find<FavoritesController>();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -65,18 +52,19 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: Icon(
-                          restaurant.isFavorite ? Icons.star : Icons.star_border,
-                          color: restaurant.isFavorite ? Colors.amber : Theme.of(context).colorScheme.secondary,
-                          size: 28,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            restaurant.isFavorite = !restaurant.isFavorite;
-                          });
-                        },
-                      ),
+                      Obx(() {
+                        final isFavorite = favoritesController.isFavorite(restaurant.id);
+                        return IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.star : Icons.star_border,
+                            color: isFavorite ? Colors.amber : Theme.of(context).colorScheme.secondary,
+                            size: 28,
+                          ),
+                          onPressed: () {
+                            controller.toggleFavorite(restaurant.id);
+                          },
+                        );
+                      }),
                       PopupMenuButton<String>(
                         offset: const Offset(0, 50),
                         shape: RoundedRectangleBorder(
@@ -84,10 +72,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                         ),
                         onSelected: (value) {
                           if (value == 'reservations') {
-                            // Navigate to my reservations screen
-                            Get.to(() => const MyReservationsScreen());
+                            Get.toNamed('/my-reservations');
                           } else if (value == 'signout') {
-                            // Sign out
                             Get.offAllNamed('/login');
                           }
                         },
@@ -299,43 +285,44 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                         mainAxisSpacing: 12,
                         childAspectRatio: 2.5,
                       ),
-                      itemCount: timeSlots.length,
+                      itemCount: controller.timeSlots.length,
                       itemBuilder: (context, index) {
-                        final timeSlot = timeSlots[index];
-                        final isSelected = selectedTimeSlot == timeSlot;
+                        final timeSlot = controller.timeSlots[index];
                         
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedTimeSlot = timeSlot;
-                            });
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey[200],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
+                        return Obx(() {
+                          final isSelected = controller.selectedTimeSlot.value == timeSlot;
+                          
+                          return GestureDetector(
+                            onTap: () {
+                              controller.setTimeSlot(timeSlot);
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
                                 color: isSelected
                                     ? Theme.of(context).primaryColor
-                                    : Colors.grey[300]!,
-                                width: 2,
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Theme.of(context).primaryColor
+                                      : Colors.grey[300]!,
+                                  width: 2,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                timeSlot,
+                                style: GoogleFonts.cairo(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.grey[700],
+                                ),
                               ),
                             ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              timeSlot,
-                              style: GoogleFonts.cairo(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.grey[700],
-                              ),
-                            ),
-                          ),
-                        );
+                          );
+                        });
                       },
                     ),
                     
@@ -346,62 +333,65 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
             ),
             
             // Bottom Button
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: selectedTimeSlot == null
-                        ? null
-                        : () {
-                            Get.to(
-                              () => const TableSelectionScreen(),
-                              arguments: {
-                                'restaurant': restaurant,
-                                'timeSlot': selectedTimeSlot,
-                              },
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      disabledBackgroundColor: Colors.grey[300],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
+            Obx(() {
+              final selectedTimeSlot = controller.selectedTimeSlot.value;
+              
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
                     ),
-                    child: Text(
-                      selectedTimeSlot == null
-                          ? 'Select a Time Slot'
-                          : 'Choose Your Table',
-                      style: GoogleFonts.cairo(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: selectedTimeSlot == null
-                            ? Colors.grey[500]
-                            : Colors.white,
+                  ],
+                ),
+                child: SafeArea(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: selectedTimeSlot == null
+                          ? null
+                          : () {
+                              Get.toNamed(
+                                '/table-selection',
+                                arguments: {
+                                  'restaurant': restaurant,
+                                  'timeSlot': selectedTimeSlot,
+                                },
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        disabledBackgroundColor: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        selectedTimeSlot == null
+                            ? 'Select a Time Slot'
+                            : 'Choose Your Table',
+                        style: GoogleFonts.cairo(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: selectedTimeSlot == null
+                              ? Colors.grey[500]
+                              : Colors.white,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
           ],
         ),
       ),
     );
   }
 }
-

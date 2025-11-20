@@ -2,21 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/reservation_model.dart';
-import '../services/reservation_service.dart';
+import '../controllers/my_reservations_controller.dart';
 
-class MyReservationsScreen extends StatefulWidget {
+class MyReservationsScreen extends GetView<MyReservationsController> {
   const MyReservationsScreen({super.key});
 
   @override
-  State<MyReservationsScreen> createState() => _MyReservationsScreenState();
-}
-
-class _MyReservationsScreenState extends State<MyReservationsScreen> {
-  final ReservationService _reservationService = ReservationService();
-
-  @override
   Widget build(BuildContext context) {
-    final reservations = _reservationService.getReservations();
+    // Check if user is logged in
+    if (controller.currentUserId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.toNamed('/login');
+      });
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -53,44 +55,54 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
 
             // Reservations List
             Expanded(
-              child: reservations.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.calendar_today_outlined,
-                            size: 80,
-                            color: Colors.grey[400],
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                if (controller.reservations.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 80,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No Reservations Yet',
+                          style: GoogleFonts.cairo(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No Reservations Yet',
-                            style: GoogleFonts.cairo(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[600],
-                            ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Your reservations will appear here',
+                          style: GoogleFonts.tajawal(
+                            fontSize: 14,
+                            color: Colors.grey[500],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Your reservations will appear here',
-                            style: GoogleFonts.tajawal(
-                              fontSize: 14,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: reservations.length,
-                      itemBuilder: (context, index) {
-                        final reservation = reservations[index];
-                        return _buildReservationCard(context, reservation);
-                      },
+                        ),
+                      ],
                     ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: controller.reservations.length,
+                  itemBuilder: (context, index) {
+                    final reservation = controller.reservations[index];
+                    return _buildReservationCard(context, reservation);
+                  },
+                );
+              }),
             ),
           ],
         ),
@@ -398,18 +410,29 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              _reservationService.cancelReservation(reservation.id);
-              Get.back();
-              setState(() {});
-              Get.snackbar(
-                'Reservation Cancelled',
-                'Your reservation has been cancelled successfully',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.red[600],
-                colorText: Colors.white,
-                duration: const Duration(seconds: 2),
-              );
+            onPressed: () async {
+              try {
+                await controller.cancelReservation(reservation.id);
+                Get.back();
+                Get.snackbar(
+                  'Reservation Cancelled',
+                  'Your reservation has been cancelled successfully',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red[600],
+                  colorText: Colors.white,
+                  duration: const Duration(seconds: 2),
+                );
+              } catch (e) {
+                Get.back();
+                Get.snackbar(
+                  'Error',
+                  'Failed to cancel reservation. Please try again.',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red[600],
+                  colorText: Colors.white,
+                  duration: const Duration(seconds: 2),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[600],

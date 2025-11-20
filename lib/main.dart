@@ -1,12 +1,18 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:restaurant_reservation_app/controllers/auth_controller.dart';
+import 'package:restaurant_reservation_app/controllers/favorites_controller.dart';
+import 'package:restaurant_reservation_app/controllers/restaurants_list_controller.dart';
+import 'package:restaurant_reservation_app/controllers/restaurant_detail_controller.dart';
+import 'package:restaurant_reservation_app/controllers/table_selection_controller.dart';
+import 'package:restaurant_reservation_app/controllers/my_reservations_controller.dart';
 import 'package:restaurant_reservation_app/services/auth_service.dart';
 import 'package:restaurant_reservation_app/db/reservations_crud.dart';
 import 'package:restaurant_reservation_app/db/restaurant_crud.dart';
+import 'package:restaurant_reservation_app/db/user_crud.dart';
 import 'package:restaurant_reservation_app/db/db_instance.dart';
-// import 'package:firebase_core/firebase_core.dart';
-// import 'firebase_options.dart';
+import 'firebase_options.dart';
 
 // Import pages
 import 'pages/splash_screen.dart';
@@ -14,15 +20,18 @@ import 'pages/login_screen.dart';
 import 'pages/register_screen.dart';
 import 'pages/categories_screen.dart';
 import 'pages/restaurants_list_screen.dart';
+import 'pages/restaurant_detail_screen.dart';
+import 'pages/table_selection_screen.dart';
+import 'pages/my_reservations_screen.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Initialize Firebase after running: flutterfire configure
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Register services as permanent dependencies
   // Register CloudDb first since ReservationsCrud and RestaurantCrud depend on it
@@ -30,6 +39,11 @@ void main() async {
   Get.put(AuthService(), permanent: true);
   Get.put(ReservationsCrud(), permanent: true);
   Get.put(RestaurantCrud(), permanent: true);
+  Get.put(UserCrud(), permanent: true);
+  
+  // Register FavoritesController as permanent so it persists across screens
+  Get.put(FavoritesController(), permanent: true);
+  
   runApp(const MyApp());
 }
 
@@ -42,11 +56,13 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Fatoorna - Restaurant Reservations',
 
-      // Set initial route
-      initialRoute: '/splash',
-
       // Configure routes
+      initialRoute: '/',
       getPages: [
+        GetPage(
+          name: '/',
+          page: () => const SplashScreen(),
+        ),
         GetPage(
           name: '/splash',
           page: () => const SplashScreen(),
@@ -72,6 +88,30 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: '/restaurants',
           page: () => const RestaurantsListScreen(),
+          binding: BindingsBuilder(() {
+            Get.lazyPut(() => RestaurantsListController());
+          }),
+        ),
+        GetPage(
+          name: '/table-selection',
+          page: () => const TableSelectionScreen(),
+          binding: BindingsBuilder(() {
+            Get.lazyPut(() => TableSelectionController());
+          }),
+        ),
+        GetPage(
+          name: '/restaurant-detail',
+          page: () => const RestaurantDetailScreen(),
+          binding: BindingsBuilder(() {
+            Get.lazyPut(() => RestaurantDetailController());
+          }),
+        ),
+        GetPage(
+          name: '/my-reservations',
+          page: () => const MyReservationsScreen(),
+          binding: BindingsBuilder(() {
+            Get.lazyPut(() => MyReservationsController());
+          }),
         ),
       ],
 

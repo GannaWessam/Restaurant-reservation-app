@@ -16,10 +16,10 @@ class _SplashScreenState extends State<SplashScreen> {
     _navigateToLogin();
   }
 
-  // Navigate to login after 5 seconds (slower)
+  // Navigate to home (categories) after 5 seconds
   Future<void> _navigateToLogin() async {
     await Future.delayed(const Duration(seconds: 5));
-    Get.offNamed('/login');
+    Get.offNamed('/home');
   }
 
   @override

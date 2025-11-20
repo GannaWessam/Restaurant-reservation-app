@@ -8,7 +8,6 @@ class UserModel {
   final double? currentLat;
   final double? currentLng;
   final List<String>? favoritePlaces;
-  final List<String>? visitedPlaces;
 
   UserModel({
     required this.uid,
@@ -18,7 +17,6 @@ class UserModel {
     this.currentLat,
     this.currentLng,
     this.favoritePlaces,
-    this.visitedPlaces,
   });
 
   // Convert UserModel to JSON
@@ -30,7 +28,6 @@ class UserModel {
       'currentLat': currentLat,
       'currentLng': currentLng,
       'favoritePlaces': favoritePlaces,
-      'visitedPlaces': visitedPlaces,
     };
   }
 
@@ -44,9 +41,6 @@ class UserModel {
       currentLng: json['currentLng'],
       favoritePlaces: json['favoritePlaces'] != null
           ? List<String>.from(json['favoritePlaces'])
-          : null,
-      visitedPlaces: json['visitedPlaces'] != null
-          ? List<String>.from(json['visitedPlaces'])
           : null,
     );
   }

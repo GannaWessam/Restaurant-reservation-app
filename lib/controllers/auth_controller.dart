@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/auth_service.dart';
+import 'favorites_controller.dart';
 
 /// AuthController - ViewModel in MVVM pattern
 /// Handles business logic and state management for authentication
@@ -47,7 +48,26 @@ class AuthController extends GetxController {
     isSubmitting.value = false;
 
     if (signedIn) {
-      Get.offAllNamed('/home');
+      // Reload favorites after login
+      try {
+        final favoritesController = Get.find<FavoritesController>();
+        await favoritesController.loadFavorites();
+      } catch (e) {
+        print('Error loading favorites after login: $e');
+      }
+      
+      // Check if there's a return route (e.g., from table selection)
+      final args = Get.arguments as Map<String, dynamic>?;
+      if (args != null && args.containsKey('returnRoute') && args['returnRoute'] == '/table-selection') {
+        // Return to table selection with reservation data
+        Get.offNamed('/table-selection', arguments: {
+          'restaurant': args['restaurant'],
+          'timeSlot': args['timeSlot'],
+          'selectedChairs': args['selectedChairs'],
+        });
+      } else {
+        Get.offAllNamed('/home');
+      }
     } else {
       Get.snackbar(
         'Error signing in',
@@ -84,7 +104,26 @@ class AuthController extends GetxController {
     isSubmitting.value = false;
 
     if (success != null) {
-      Get.offAllNamed('/home');
+      // Reload favorites after registration
+      try {
+        final favoritesController = Get.find<FavoritesController>();
+        await favoritesController.loadFavorites();
+      } catch (e) {
+        print('Error loading favorites after registration: $e');
+      }
+      
+      // Check if there's a return route (e.g., from table selection)
+      final args = Get.arguments as Map<String, dynamic>?;
+      if (args != null && args.containsKey('returnRoute') && args['returnRoute'] == '/table-selection') {
+        // Return to table selection with reservation data
+        Get.offNamed('/table-selection', arguments: {
+          'restaurant': args['restaurant'],
+          'timeSlot': args['timeSlot'],
+          'selectedChairs': args['selectedChairs'],
+        });
+      } else {
+        Get.offAllNamed('/home');
+      }
     } else {
       Get.snackbar(
         'Registration failed',

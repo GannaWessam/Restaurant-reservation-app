@@ -1,6 +1,7 @@
 /// ReservationModel - Model for storing reservation data
 class ReservationModel {
   final String id;
+  final String userId; // ID of the user who made the reservation
   final String restaurantName;
   final String restaurantCategory;
   final String timeSlot;
@@ -11,6 +12,7 @@ class ReservationModel {
 
   ReservationModel({
     required this.id,
+    required this.userId,
     required this.restaurantName,
     required this.restaurantCategory,
     required this.timeSlot,
@@ -24,6 +26,7 @@ class ReservationModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'userId': userId,
       'restaurantName': restaurantName,
       'restaurantCategory': restaurantCategory,
       'timeSlot': timeSlot,
@@ -37,14 +40,17 @@ class ReservationModel {
   // Create from JSON
   factory ReservationModel.fromJson(Map<String, dynamic> json) {
     return ReservationModel(
-      id: json['id'],
-      restaurantName: json['restaurantName'],
-      restaurantCategory: json['restaurantCategory'],
-      timeSlot: json['timeSlot'],
-      seatCount: json['seatCount'],
-      seatIds: List<int>.from(json['seatIds']),
-      reservationDate: DateTime.parse(json['reservationDate']),
-      restaurantImage: json['restaurantImage'],
+      id: json['id'] as String? ?? '',
+      userId: json['userId'] as String? ?? '', // Handle nullable/missing userId
+      restaurantName: json['restaurantName'] as String? ?? '',
+      restaurantCategory: json['restaurantCategory'] as String? ?? '',
+      timeSlot: json['timeSlot'] as String? ?? '',
+      seatCount: (json['seatCount'] as num? ?? 0).toInt(),
+      seatIds: json['seatIds'] != null ? List<int>.from(json['seatIds']) : [],
+      reservationDate: json['reservationDate'] != null 
+          ? DateTime.parse(json['reservationDate'] as String)
+          : DateTime.now(),
+      restaurantImage: json['restaurantImage'] as String?,
     );
   }
 }

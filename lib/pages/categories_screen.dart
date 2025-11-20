@@ -11,17 +11,6 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  // Track favorite status for each category
-  final Map<String, bool> _favorites = {
-    'French Breakfast': false,
-    'American Breakfast': false,
-    'Egyptian Breakfast': false,
-    'Healthy Breakfast': false,
-    'Coffee Breakfast': false,
-    'Turkish Breakfast': false,
-    'Open Buffet Breakfast': false,
-  };
-
   @override
   Widget build(BuildContext context) {
     // Get user name (mock for now)
@@ -66,7 +55,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       onSelected: (value) {
                         if (value == 'reservations') {
                           // Navigate to my reservations screen
-                          Get.to(() => const MyReservationsScreen());
+                          Get.toNamed('/my-reservations');
                         } else if (value == 'signout') {
                           // Sign out
                           Get.offAllNamed('/login');
@@ -255,7 +244,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   children: [
                     _buildFilterChip(context, 'All cuisines', true),
                     const SizedBox(width: 12),
-                    _buildFilterChip(context, 'Most booked', false),
+                    // _buildFilterChip(context, 'Most booked', false),//////////
                   ],
                 ),
                 
@@ -266,7 +255,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   context,
                   'French Breakfast',
                   'FRENCH',
-                  '12 tables',
+                  '12 tables', //todo: num of restaurants in this category
                   'Butter croissants, seasonal jam and café au lait. Perfect for a light, slow morning with strong coffees and warm pastry aromas.',
                   'Peak: 9:00 AM',
                   'french.jpg',
@@ -422,34 +411,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         color: Theme.of(context).primaryColor.withOpacity(0.3),
                       ),
                     ),
-                  // Favorite Star Icon
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _favorites[title] = !(_favorites[title] ?? false);
-                        });
-                      },
-                    child: Container(
-                        padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          shape: BoxShape.circle,
-                      ),
-                        child: Icon(
-                          _favorites[title] == true 
-                              ? Icons.star 
-                              : Icons.star_border,
-                          color: _favorites[title] == true 
-                              ? Colors.amber 
-                              : Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

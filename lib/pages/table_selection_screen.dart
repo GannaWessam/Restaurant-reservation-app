@@ -2,108 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/restaurant_model.dart';
-import '../models/reservation_model.dart';
-import '../services/reservation_service.dart';
+import '../controllers/table_selection_controller.dart';
+import '../services/auth_service.dart';
 
-class TableSelectionScreen extends StatefulWidget {
+class TableSelectionScreen extends GetView<TableSelectionController> {
   const TableSelectionScreen({super.key});
-
-  @override
-  State<TableSelectionScreen> createState() => _TableSelectionScreenState();
-}
-
-class _TableSelectionScreenState extends State<TableSelectionScreen> {
-  final Set<int> selectedChairs = {};
-  final ReservationService _reservationService = ReservationService();
-
-  // Table and chair layout
-  final List<Map<String, dynamic>> tables = [
-    {
-      'id': 1,
-      'x': 20.0,
-      'y': 30.0,
-      'shape': 'square',
-      'size': 50.0,
-      'chairs': [
-        {'id': 1, 'position': 'top', 'booked': false},
-        {'id': 2, 'position': 'right', 'booked': true},
-        {'id': 3, 'position': 'bottom', 'booked': false},
-        {'id': 4, 'position': 'left', 'booked': false},
-      ],
-    },
-    {
-      'id': 2,
-      'x': 200.0,
-      'y': 30.0,
-      'shape': 'square',
-      'size': 50.0,
-      'chairs': [
-        {'id': 5, 'position': 'top', 'booked': true},
-        {'id': 6, 'position': 'right', 'booked': false},
-        {'id': 7, 'position': 'bottom', 'booked': false},
-        {'id': 8, 'position': 'left', 'booked': false},
-      ],
-    },
-    {
-      'id': 3,
-      'x': 90.0,
-      'y': 180.0,
-      'shape': 'round',
-      'size': 80.0,
-      'chairs': [
-        {'id': 9, 'position': 'top-left', 'booked': false},
-        {'id': 10, 'position': 'top', 'booked': false},
-        {'id': 11, 'position': 'top-right', 'booked': true},
-        {'id': 12, 'position': 'right', 'booked': false},
-        {'id': 13, 'position': 'bottom-right', 'booked': false},
-        {'id': 14, 'position': 'bottom', 'booked': true},
-        {'id': 15, 'position': 'bottom-left', 'booked': false},
-        {'id': 16, 'position': 'left', 'booked': false},
-      ],
-    },
-    {
-      'id': 4,
-      'x': 20.0,
-      'y': 380.0,
-      'shape': 'round',
-      'size': 60.0,
-      'chairs': [
-        {'id': 17, 'position': 'top', 'booked': false},
-        {'id': 18, 'position': 'right', 'booked': false},
-        {'id': 19, 'position': 'bottom', 'booked': true},
-        {'id': 20, 'position': 'left', 'booked': false},
-      ],
-    },
-    {
-      'id': 5,
-      'x': 200.0,
-      'y': 380.0,
-      'shape': 'round',
-      'size': 60.0,
-      'chairs': [
-        {'id': 21, 'position': 'top', 'booked': false},
-        {'id': 22, 'position': 'right', 'booked': false},
-        {'id': 23, 'position': 'bottom', 'booked': false},
-        {'id': 24, 'position': 'left', 'booked': false},
-      ],
-    },
-    {
-      'id': 6,
-      'x': 70.0,
-      'y': 540.0,
-      'shape': 'rectangle',
-      'size': 60.0,
-      'width': 120.0,
-      'chairs': [
-        {'id': 25, 'position': 'top-left', 'booked': false},
-        {'id': 26, 'position': 'top-right', 'booked': false},
-        {'id': 27, 'position': 'right', 'booked': true},
-        {'id': 28, 'position': 'bottom-right', 'booked': false},
-        {'id': 29, 'position': 'bottom-left', 'booked': false},
-        {'id': 30, 'position': 'left', 'booked': false},
-      ],
-    },
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +82,7 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
                       _buildLegendItem(
                         context,
                         Colors.red[600]!,
-                        'Booked',
+                        'Unavailable',
                       ),
                     ],
                   ),
@@ -189,41 +92,53 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
             
             // Restaurant Floor Plan
             Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: SingleChildScrollView(
-                    child: SizedBox(
-                      height: 700,
-                      child: Stack(
-                        children: [
-                          // Tables with chairs
-                          ...tables.map((table) {
-                            return Positioned(
-                              left: table['x'] as double,
-                              top: table['y'] as double,
-                              child: _buildTableWithChairs(context, table),
-                            );
-                          }).toList(),
-                        ],
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SingleChildScrollView(
+                      child: SizedBox(
+                        height: 700,
+                        child: Stack(
+                          children: [
+                            // Tables with chairs
+                            ...controller.tables.map((table) {
+                              return Positioned(
+                                left: table['x'] as double,
+                                top: table['y'] as double,
+                                child: _buildTableWithChairs(context, table),
+                              );
+                            }).toList(),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              }),
             ),
             
             const SizedBox(height: 16),
             
             // Selected Chairs Info
-            if (selectedChairs.isNotEmpty)
-              Container(
+            Obx(() {
+              if (controller.selectedChairs.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              
+              return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -246,7 +161,7 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${selectedChairs.length} ${selectedChairs.length == 1 ? 'Seat' : 'Seats'} Selected',
+                            '${controller.selectedChairs.length} ${controller.selectedChairs.length == 1 ? 'Seat' : 'Seats'} Selected',
                             style: GoogleFonts.cairo(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -265,7 +180,8 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
                     ),
                   ],
                 ),
-              ),
+              );
+            }),
             
             // Bottom Button
             Container(
@@ -281,41 +197,46 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
                 ],
               ),
               child: SafeArea(
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: selectedChairs.isEmpty
-                        ? null
-                        : () {
-                            _confirmReservation(
-                              restaurant,
-                              timeSlot,
-                              selectedChairs.length,
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8D6E63),
-                      disabledBackgroundColor: Colors.grey[300],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                child: Obx(() {
+                  final isEmpty = controller.selectedChairs.isEmpty;
+                  
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: isEmpty
+                          ? null
+                          : () {
+                              // Check if user is logged in before confirming reservation
+                              if (!controller.isLoggedIn) {
+                                _showLoginRequiredDialog(restaurant, timeSlot);
+                              } else {
+                                _confirmReservation(restaurant, timeSlot);
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8D6E63),
+                        disabledBackgroundColor: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
                       ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      selectedChairs.isEmpty
-                          ? 'Select Seats to Reserve'
-                          : 'Reserve',
-                      style: GoogleFonts.cairo(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: selectedChairs.isEmpty
-                            ? Colors.grey[500]
-                            : Colors.white,
+                      child: Text(
+                        isEmpty
+                            ? 'Select Seats to Reserve'
+                            : 'Reserve',
+                        style: GoogleFonts.cairo(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isEmpty
+                              ? Colors.grey[500]
+                              : Colors.white,
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                }),
               ),
             ),
           ],
@@ -397,7 +318,6 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
     final chairId = chair['id'] as int;
     final position = chair['position'] as String;
     final isBooked = chair['booked'] as bool;
-    final isSelected = selectedChairs.contains(chairId);
 
     const double baseOffset = 50.0;
     const double chairDistance = 8.0;
@@ -444,48 +364,46 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
       }
     }
 
-    return Positioned(
-      left: getLeft(),
-      top: getTop(),
-      child: GestureDetector(
-        onTap: isBooked
-            ? null
-            : () {
-                setState(() {
-                  if (isSelected) {
-                    selectedChairs.remove(chairId);
-                  } else {
-                    selectedChairs.add(chairId);
-                  }
-                });
-              },
-        child: Container(
-          width: chairWidth,
-          height: chairHeight,
-          decoration: BoxDecoration(
-            color: isBooked
-                ? Colors.red[600]
-                : isSelected
-                    ? const Color(0xFF8D6E63)
-                    : Colors.green[600],
-            borderRadius: BorderRadius.circular(6),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
+    return Obx(() {
+      final isSelected = controller.selectedChairs.contains(chairId);
+      final isAvailable = !isBooked && controller.isChairAvailable(chairId);
+      
+      return Positioned(
+        left: getLeft(),
+        top: getTop(),
+        child: GestureDetector(
+          onTap: isAvailable
+              ? () {
+                  controller.toggleChair(chairId);
+                }
+              : null,
+          child: Container(
+            width: chairWidth,
+            height: chairHeight,
+            decoration: BoxDecoration(
+              color: isBooked || !isAvailable
+                  ? Colors.red[600]
+                  : isSelected
+                      ? const Color(0xFF8D6E63)
+                      : Colors.green[600],
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
-  void _confirmReservation(
+  void _showLoginRequiredDialog(
     RestaurantModel restaurant,
     String timeSlot,
-    int seatCount,
   ) {
     Get.dialog(
       AlertDialog(
@@ -493,21 +411,14 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         title: Text(
-          'Confirm Reservation',
+          'Login Required',
           style: GoogleFonts.cairo(
             fontWeight: FontWeight.w600,
           ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow(Icons.restaurant, 'Restaurant', restaurant.name),
-            const SizedBox(height: 12),
-            _buildInfoRow(Icons.access_time, 'Time', timeSlot),
-            const SizedBox(height: 12),
-            _buildInfoRow(Icons.event_seat, 'Seats', '$seatCount ${seatCount == 1 ? 'seat' : 'seats'}'),
-          ],
+        content: Text(
+          'Please log in to make a reservation.',
+          style: GoogleFonts.tajawal(),
         ),
         actions: [
           TextButton(
@@ -523,23 +434,83 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Create and save reservation
-              final reservation = ReservationModel(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
-                restaurantName: restaurant.name,
-                restaurantCategory: restaurant.category,
-                timeSlot: timeSlot,
-                seatCount: seatCount,
-                seatIds: selectedChairs.toList()..sort(),
-                reservationDate: DateTime.now(),
-                restaurantImage: restaurant.imagePath,
-              );
+              Get.back();
+              // Navigate to login, and pass reservation data to return here after login
+              Get.toNamed('/login', arguments: {
+                'returnRoute': '/table-selection',
+                'restaurant': restaurant,
+                'timeSlot': timeSlot,
+                'selectedChairs': controller.selectedChairs.toList(),
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8D6E63),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Login',
+              style: GoogleFonts.cairo(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmReservation(
+    RestaurantModel restaurant,
+    String timeSlot,
+  ) {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'Confirm Reservation',
+          style: GoogleFonts.cairo(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Obx(() {
+          final seatCount = controller.selectedChairs.length;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow(Icons.restaurant, 'Restaurant', restaurant.name),
+              const SizedBox(height: 12),
+              _buildInfoRow(Icons.access_time, 'Time', timeSlot),
+              const SizedBox(height: 12),
+              _buildInfoRow(Icons.event_seat, 'Seats', '$seatCount ${seatCount == 1 ? 'seat' : 'seats'}'),
+            ],
+          );
+        }),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Get.back();
+            },
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.cairo(
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final seatCount = controller.selectedChairs.length;
+              await controller.confirmReservation();
               
-              _reservationService.addReservation(reservation);
+              Get.back();
+              Get.back();
+              Get.back();
               
-              Get.back();
-              Get.back();
-              Get.back();
               Get.snackbar(
                 'Reservation Confirmed!',
                 'Your $seatCount ${seatCount == 1 ? 'seat' : 'seats'} at ${restaurant.name} is reserved for $timeSlot',
@@ -596,4 +567,3 @@ class _TableSelectionScreenState extends State<TableSelectionScreen> {
     );
   }
 }
-

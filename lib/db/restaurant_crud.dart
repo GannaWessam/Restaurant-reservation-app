@@ -11,14 +11,48 @@ class RestaurantCrud {
   FirebaseFirestore get firestore => Get.find<CloudDb>().db;
 
   Future<void> addRestaurant(RestaurantModel restaurant) async { //vendor
-    await firestore.collection('restaurants').doc(restaurant.id).set(restaurant.toJson());
-    print('Restaurant added: ${restaurant.id}');
+    try {
+      await firestore.collection('restaurants').doc(restaurant.id).set(restaurant.toJson());
+      print('Restaurant added: ${restaurant.id}');
+    } catch (e) {
+      print(e);
+    }
   }
-  Future<void> getAllRestaurants() async { //vendor
-    await firestore.collection('restaurants').get();
+  Future<List<RestaurantModel>> getAllRestaurants() async { //vendor
+    try {
+      final restaurantsSnapshot = await firestore.collection('restaurants').get();
+      return restaurantsSnapshot.docs.map((restaurant)=>
+          RestaurantModel.fromJson(restaurant.data())).toList();
+    } catch (e) {
+      print(e);
+      return [];
+    }
   }
-  Future<void> getRestaurantsByCategory(String category) async { //user
-      await firestore.collection('restaurants').where('category', isEqualTo: category).get();
+  Future<List<RestaurantModel>> getRestaurantsByCategory(String category) async { //user
+      try {
+        final restaurantsSnapshot =
+          await firestore.collection('restaurants').where('category', isEqualTo: category).get();
+
+        
+        return restaurantsSnapshot.docs.map((doc) {
+          final data = doc.data();
+          // Include document ID in the data
+          data['id'] = doc.id;
+          print('Restaurant data: $data');
+          
+          try {
+            return RestaurantModel.fromJson(data);
+          } catch (e) {
+            print('Error parsing restaurant ${doc.id}: $e');
+            print('Data: $data');
+            // Return null for invalid documents, filter them out
+            return null;
+          }
+        }).where((restaurant) => restaurant != null).cast<RestaurantModel>().toList();
+      } catch (e) {
+        print('Error getting restaurants by category: $e');
+        return [];
+      }
     }
 
 }
