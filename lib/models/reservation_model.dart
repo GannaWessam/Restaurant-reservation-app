@@ -7,7 +7,8 @@ class ReservationModel {
   final String timeSlot;
   final int seatCount;
   final List<int> seatIds;
-  final DateTime reservationDate;
+  final DateTime reservationDate; // When the reservation was created
+  final DateTime scheduledDate; // When the reservation is scheduled for
   final String? restaurantImage;
 
   ReservationModel({
@@ -19,6 +20,7 @@ class ReservationModel {
     required this.seatCount,
     required this.seatIds,
     required this.reservationDate,
+    required this.scheduledDate,
     this.restaurantImage,
   });
 
@@ -33,6 +35,7 @@ class ReservationModel {
       'seatCount': seatCount,
       'seatIds': seatIds,
       'reservationDate': reservationDate.toIso8601String(),
+      'scheduledDate': scheduledDate.toIso8601String(),
       'restaurantImage': restaurantImage,
     };
   }
@@ -49,6 +52,9 @@ class ReservationModel {
       seatIds: json['seatIds'] != null ? List<int>.from(json['seatIds']) : [],
       reservationDate: json['reservationDate'] != null 
           ? DateTime.parse(json['reservationDate'] as String)
+          : DateTime.now(),
+      scheduledDate: json['scheduledDate'] != null 
+          ? DateTime.parse(json['scheduledDate'] as String)
           : DateTime.now(),
       restaurantImage: json['restaurantImage'] as String?,
     );

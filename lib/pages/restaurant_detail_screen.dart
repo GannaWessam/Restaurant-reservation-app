@@ -264,6 +264,111 @@ class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
                     
                     const SizedBox(height: 24),
                     
+                    // Select Date
+                    Text(
+                      'Select Date',
+                      style: GoogleFonts.cairo(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Date Picker Button
+                    Obx(() {
+                      final selectedDate = controller.selectedDate.value;
+                      return GestureDetector(
+                        onTap: () async {
+                          final DateTime now = DateTime.now();
+                          final DateTime firstDate = now;
+                          final DateTime lastDate = now.add(const Duration(days: 365));
+                          
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate ?? now,
+                            firstDate: firstDate,
+                            lastDate: lastDate,
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: ColorScheme.light(
+                                    primary: Theme.of(context).primaryColor,
+                                    onPrimary: Colors.white,
+                                    onSurface: Theme.of(context).colorScheme.secondary,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          
+                          if (picked != null) {
+                            controller.setDate(picked);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: selectedDate != null
+                                ? Theme.of(context).primaryColor.withOpacity(0.1)
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: selectedDate != null
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.grey[300]!,
+                              width: 2,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: selectedDate != null
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey[600],
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Reservation Date',
+                                      style: GoogleFonts.tajawal(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      controller.getFormattedDate(),
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: selectedDate != null
+                                            ? Theme.of(context).colorScheme.secondary
+                                            : Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: Colors.grey[400],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                    
+                    const SizedBox(height: 24),
+                    
                     // Select Time Slot
                     Text(
                       'Select Time Slot',
@@ -335,6 +440,8 @@ class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
             // Bottom Button
             Obx(() {
               final selectedTimeSlot = controller.selectedTimeSlot.value;
+              final selectedDate = controller.selectedDate.value;
+              final isReady = selectedTimeSlot != null && selectedDate != null;
               
               return Container(
                 padding: const EdgeInsets.all(20),
@@ -353,7 +460,7 @@ class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: selectedTimeSlot == null
+                      onPressed: !isReady
                           ? null
                           : () {
                               Get.toNamed(
@@ -361,6 +468,7 @@ class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
                                 arguments: {
                                   'restaurant': restaurant,
                                   'timeSlot': selectedTimeSlot,
+                                  'scheduledDate': selectedDate,
                                 },
                               );
                             },
@@ -373,13 +481,15 @@ class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
                         elevation: 0,
                       ),
                       child: Text(
-                        selectedTimeSlot == null
-                            ? 'Select a Time Slot'
-                            : 'Choose Your Table',
+                        selectedDate == null
+                            ? 'Select a Date'
+                            : selectedTimeSlot == null
+                                ? 'Select a Time Slot'
+                                : 'Choose Your Table',
                         style: GoogleFonts.cairo(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: selectedTimeSlot == null
+                          color: !isReady
                               ? Colors.grey[500]
                               : Colors.white,
                         ),

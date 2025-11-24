@@ -24,6 +24,7 @@ class TableSelectionController extends GetxController {
 
   RestaurantModel? _restaurant;
   String? _timeSlot;
+  DateTime? _scheduledDate;
 
   @override
   void onInit() {
@@ -32,6 +33,7 @@ class TableSelectionController extends GetxController {
     if (args != null) {
       _restaurant = args['restaurant'] as RestaurantModel;
       _timeSlot = args['timeSlot'] as String;
+      _scheduledDate = args['scheduledDate'] as DateTime?;
       
       // Restore selected chairs if returning from login
       if (args.containsKey('selectedChairs')) {
@@ -290,7 +292,7 @@ class TableSelectionController extends GetxController {
 
   // Confirm reservation
   Future<void> confirmReservation() async {
-    if (_restaurant == null || _timeSlot == null) return;
+    if (_restaurant == null || _timeSlot == null || _scheduledDate == null) return;
     if (selectedChairs.isEmpty) return;
 
     // Check if user is logged in
@@ -301,6 +303,7 @@ class TableSelectionController extends GetxController {
         'returnRoute': '/table-selection',
         'restaurant': _restaurant,
         'timeSlot': _timeSlot,
+        'scheduledDate': _scheduledDate,
         'selectedChairs': selectedChairs.toList(),
       });
       return;
@@ -314,7 +317,8 @@ class TableSelectionController extends GetxController {
       timeSlot: _timeSlot!,
       seatCount: selectedChairs.length,
       seatIds: selectedChairs.toList()..sort(),
-      reservationDate: DateTime.now(),
+      reservationDate: DateTime.now(), // When reservation was created
+      scheduledDate: _scheduledDate!, // When reservation is scheduled for
       restaurantImage: _restaurant!.imagePath,
     );
 

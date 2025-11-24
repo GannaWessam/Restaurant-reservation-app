@@ -63,6 +63,7 @@ class AuthController extends GetxController {
         Get.offNamed('/table-selection', arguments: {
           'restaurant': args['restaurant'],
           'timeSlot': args['timeSlot'],
+          'scheduledDate': args['scheduledDate'],
           'selectedChairs': args['selectedChairs'],
         });
       } else {
@@ -119,6 +120,7 @@ class AuthController extends GetxController {
         Get.offNamed('/table-selection', arguments: {
           'restaurant': args['restaurant'],
           'timeSlot': args['timeSlot'],
+          'scheduledDate': args['scheduledDate'],
           'selectedChairs': args['selectedChairs'],
         });
       } else {

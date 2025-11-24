@@ -214,7 +214,7 @@ class MyReservationsScreen extends GetView<MyReservationsController> {
                     context,
                     Icons.calendar_today,
                     'Date',
-                    _formatDate(reservation.reservationDate),
+                    _formatDate(reservation.scheduledDate),
                   ),
                 ),
               ],
@@ -366,16 +366,20 @@ class MyReservationsScreen extends GetView<MyReservationsController> {
   }
 
   String _formatDate(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final reservationDay = DateTime(date.year, date.month, date.day);
 
     if (reservationDay == today) {
-      return 'Today';
+      return 'Today, ${months[date.month - 1]} ${date.day}';
     } else if (reservationDay == today.add(const Duration(days: 1))) {
-      return 'Tomorrow';
+      return 'Tomorrow, ${months[date.month - 1]} ${date.day}';
     } else {
-      return '${date.day}/${date.month}/${date.year}';
+      return '${months[date.month - 1]} ${date.day}, ${date.year}';
     }
   }
 

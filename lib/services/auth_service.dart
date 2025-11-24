@@ -37,6 +37,7 @@ class AuthService {
   Future<bool> signOut() async {
     try {
       await _auth.signOut(); //htshel el token from local phone
+
       return true;
     } catch (e) {
       print('Error in sign out: $e');

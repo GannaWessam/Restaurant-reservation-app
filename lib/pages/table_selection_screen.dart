@@ -13,6 +13,7 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
     final args = Get.arguments as Map<String, dynamic>;
     final RestaurantModel restaurant = args['restaurant'];
     final String timeSlot = args['timeSlot'];
+    final DateTime? scheduledDate = args['scheduledDate'] as DateTime?;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -50,7 +51,7 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
                               ),
                             ),
                             Text(
-                              '${restaurant.name} • $timeSlot',
+                              '${restaurant.name} • $timeSlot${scheduledDate != null ? ' • ${_formatDate(scheduledDate)}' : ''}',
                               style: GoogleFonts.tajawal(
                                 fontSize: 14,
                                 color: Colors.grey[600],
@@ -209,9 +210,9 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
                           : () {
                               // Check if user is logged in before confirming reservation
                               if (!controller.isLoggedIn) {
-                                _showLoginRequiredDialog(restaurant, timeSlot);
+                                _showLoginRequiredDialog(restaurant, timeSlot, scheduledDate);
                               } else {
-                                _confirmReservation(restaurant, timeSlot);
+                                _confirmReservation(restaurant, timeSlot, scheduledDate);
                               }
                             },
                       style: ElevatedButton.styleFrom(
@@ -404,6 +405,7 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
   void _showLoginRequiredDialog(
     RestaurantModel restaurant,
     String timeSlot,
+    DateTime? scheduledDate,
   ) {
     Get.dialog(
       AlertDialog(
@@ -440,6 +442,7 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
                 'returnRoute': '/table-selection',
                 'restaurant': restaurant,
                 'timeSlot': timeSlot,
+                'scheduledDate': scheduledDate,
                 'selectedChairs': controller.selectedChairs.toList(),
               });
             },
@@ -464,6 +467,7 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
   void _confirmReservation(
     RestaurantModel restaurant,
     String timeSlot,
+    DateTime? scheduledDate,
   ) {
     Get.dialog(
       AlertDialog(
@@ -483,6 +487,8 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildInfoRow(Icons.restaurant, 'Restaurant', restaurant.name),
+              const SizedBox(height: 12),
+              _buildInfoRow(Icons.calendar_today, 'Date', scheduledDate != null ? _formatDate(scheduledDate) : 'Not selected'),
               const SizedBox(height: 12),
               _buildInfoRow(Icons.access_time, 'Time', timeSlot),
               const SizedBox(height: 12),
@@ -511,9 +517,10 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
               Get.back();
               Get.back();
               
+              final dateText = scheduledDate != null ? _formatDate(scheduledDate) : '';
               Get.snackbar(
                 'Reservation Confirmed!',
-                'Your $seatCount ${seatCount == 1 ? 'seat' : 'seats'} at ${restaurant.name} is reserved for $timeSlot',
+                'Your $seatCount ${seatCount == 1 ? 'seat' : 'seats'} at ${restaurant.name} is reserved for $timeSlot${dateText.isNotEmpty ? ' on $dateText' : ''}',
                 snackPosition: SnackPosition.BOTTOM,
                 backgroundColor: Colors.green,
                 colorText: Colors.white,
@@ -565,5 +572,23 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
         ),
       ],
     );
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedDay = DateTime(date.year, date.month, date.day);
+    
+    if (selectedDay == today) {
+      return 'Today, ${months[date.month - 1]} ${date.day}, ${date.year}';
+    } else if (selectedDay == today.add(const Duration(days: 1))) {
+      return 'Tomorrow, ${months[date.month - 1]} ${date.day}, ${date.year}';
+    } else {
+      return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    }
   }
 }

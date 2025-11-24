@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/auth_service.dart';
 import 'my_reservations_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -54,10 +55,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                       onSelected: (value) {
                         if (value == 'reservations') {
-                          // Navigate to my reservations screen
-                          Get.toNamed('/my-reservations');
+                          final AuthService authService = Get.find<AuthService>();
+                          if (authService.isLoggedIn()) {
+                            Get.toNamed('/my-reservations');
+                          } else {
+                            Get.toNamed('/login');
+                          }
                         } else if (value == 'signout') {
                           // Sign out
+                          final AuthService authService = Get.find<AuthService>();
+                          authService.signOut();
                           Get.offAllNamed('/login');
                         }
                       },
