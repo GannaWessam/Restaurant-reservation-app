@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:restaurant_reservation_app/controllers/auth_controller.dart';
@@ -7,11 +8,13 @@ import 'package:restaurant_reservation_app/controllers/restaurants_list_controll
 import 'package:restaurant_reservation_app/controllers/restaurant_detail_controller.dart';
 import 'package:restaurant_reservation_app/controllers/table_selection_controller.dart';
 import 'package:restaurant_reservation_app/controllers/my_reservations_controller.dart';
+import 'package:restaurant_reservation_app/db/vendor_crud.dart';
 import 'package:restaurant_reservation_app/services/auth_service.dart';
 import 'package:restaurant_reservation_app/db/reservations_crud.dart';
 import 'package:restaurant_reservation_app/db/restaurant_crud.dart';
 import 'package:restaurant_reservation_app/db/user_crud.dart';
 import 'package:restaurant_reservation_app/db/db_instance.dart';
+import 'package:restaurant_reservation_app/services/notification_service.dart';
 import 'firebase_options.dart';
 
 // Import pages
@@ -24,6 +27,15 @@ import 'pages/restaurant_detail_screen.dart';
 import 'pages/table_selection_screen.dart';
 import 'pages/my_reservations_screen.dart';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+
+Future<void> getToken() async {
+  String? token = await _fcm.getToken();
+  print("\n\n\n Device Token: $token \n\n\n");
+}
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +45,16 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  await getToken();
+
+  // Init local notifications
+  await NotificationService.initializeLocalNotifications();
+
+  // Listen to foreground messages
+  FirebaseMessaging.onMessage.listen(NotificationService.showFlutterNotification);
+  // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+
   // Register services as permanent dependencies
   // Register CloudDb first since ReservationsCrud and RestaurantCrud depend on it
   Get.put(CloudDb(), permanent: true);
@@ -40,7 +62,11 @@ void main() async {
   Get.put(ReservationsCrud(), permanent: true);
   Get.put(RestaurantCrud(), permanent: true);
   Get.put(UserCrud(), permanent: true);
-  
+  // Get.put(VendorCrud(), permanent: true);
+  Get.put(NotificationService(), permanent: true);
+
+
+
   // Register FavoritesController as permanent so it persists across screens
   Get.put(FavoritesController(), permanent: true);
   
