@@ -1,4 +1,3 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,13 +16,9 @@ class _SplashScreenState extends State<SplashScreen> {
     _navigateToLogin();
   }
 
-  // Navigate to home (categories) after 5 seconds
+  // Navigate to home (categories) after 4 seconds
+  // Note: Notification permission is already requested in main.dart
   Future<void> _navigateToLogin() async {
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
     await Future.delayed(const Duration(seconds: 4));
     Get.offNamed('/home');
   }

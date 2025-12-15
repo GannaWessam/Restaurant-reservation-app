@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:get/get.dart';
 import 'package:restaurant_reservation_app/controllers/auth_controller.dart';
 import 'package:restaurant_reservation_app/controllers/favorites_controller.dart';
@@ -29,12 +30,38 @@ import 'pages/my_reservations_screen.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
-Future<void> getToken() async {
-  String? token = await _fcm.getToken();
-  print("\n\n\n Device Token: $token \n\n\n");
-}
+//get specific device token (static for one mobile in our case - but will work dynamiclly on web)
+// final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+
+// Store the web token so it can be accessed from other parts of the app
+// String? webFcmToken;
+
+// Future<String?> getToken() async {
+//   try {
+//     // For web, configure the service worker path if needed
+//     if (kIsWeb) {
+//       await _fcm.setAutoInitEnabled(true);
+//     }
+//     String? token = await _fcm.getToken();
+//     if (kIsWeb && token != null) {
+//       webFcmToken = token; // Store web token
+//     }
+//     print("\n\n\n Device Token: $token \n\n\n");
+//     return token;
+//   } catch (e) {
+//     print("\n\n\n Error getting FCM token: $e \n\n\n");
+//     // Don't crash the app if token retrieval fails
+//     return null;
+//   }
+// }
+
+// Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp();
+//   // Optional: handle background data
+//   print('Background message: ${message.messageId}');
+// }
+
 
 
 void main() async {
@@ -45,25 +72,60 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await getToken();
+  // Request notification permission for all platforms
+  // This should be done early, before getting the token
+  // try {
+  //   final NotificationSettings settings = await _fcm.requestPermission(
+  //     alert: true,
+  //     announcement: false,
+  //     badge: true,
+  //     carPlay: false,
+  //     criticalAlert: false,
+  //     provisional: false,
+  //     sound: true,
+  //   );
+    
+  //   print("Notification permission status: ${settings.authorizationStatus}");
+    
+  //   // For web, small delay to ensure service worker is ready
+  //   if (kIsWeb) {
+  //     await Future.delayed(const Duration(milliseconds: 500));
+  //   }
+  // } catch (e) {
+  //   print("Error requesting notification permission: $e");
+  // }
 
-  // Init local notifications
-  await NotificationService.initializeLocalNotifications();
+  // Get token (with error handling) - defer to avoid blocking app startup
+  // getToken().then((token) {
+  //   if (kIsWeb && token != null) {
+  //     webFcmToken = token;
+  //   }
+  // }).catchError((e) {
+  //   print("Failed to get FCM token: $e");
+  // });
 
-  // Listen to foreground messages
-  FirebaseMessaging.onMessage.listen(NotificationService.showFlutterNotification);
-  // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  // FirebaseMessaging.onBackgroundMessage(
+  //   firebaseMessagingBackgroundHandler,
+  // );
 
+  // // Init local notifications
+  // await NotificationService.init();
+
+  // // Listen to foreground messages
+  // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //   NotificationService.showForeground(message);
+  // });
 
   // Register services as permanent dependencies
   // Register CloudDb first since ReservationsCrud and RestaurantCrud depend on it
   Get.put(CloudDb(), permanent: true);
   Get.put(AuthService(), permanent: true);
+  // Register NotificationService before ReservationsCrud since ReservationsCrud depends on it
+  Get.put(NotificationService(), permanent: true);
   Get.put(ReservationsCrud(), permanent: true);
   Get.put(RestaurantCrud(), permanent: true);
   Get.put(UserCrud(), permanent: true);
   // Get.put(VendorCrud(), permanent: true);
-  Get.put(NotificationService(), permanent: true);
 
 
 

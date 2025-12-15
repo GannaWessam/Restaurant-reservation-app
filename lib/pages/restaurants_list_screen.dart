@@ -1,11 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
 import '../models/restaurant_model.dart';
 import '../controllers/restaurants_list_controller.dart';
 import '../controllers/favorites_controller.dart';
 import 'restaurant_detail_screen.dart';
 import 'my_reservations_screen.dart';
+
+ImageProvider? _buildRestaurantImageProvider(String? imagePath) {
+  if (imagePath == null || imagePath.isEmpty) return null;
+
+  // Network URL
+  if (imagePath.startsWith('http')) {
+    return NetworkImage(imagePath);
+  }
+
+  // Asset path
+  if (imagePath.startsWith('assets/')) {
+    return AssetImage(imagePath);
+  }
+
+  // Base64 (with or without data URL prefix)
+  String base64String = imagePath;
+  if (base64String.startsWith('data:image')) {
+    final commaIndex = base64String.indexOf(',');
+    if (commaIndex != -1) {
+      base64String = base64String.substring(commaIndex + 1);
+    }
+  }
+
+  try {
+    final bytes = base64Decode(base64String);
+    return MemoryImage(bytes);
+  } catch (_) {
+    // If decoding fails, return null so placeholder can be shown
+    return null;
+  }
+}
 
 class RestaurantsListScreen extends GetView<RestaurantsListController> {
   const RestaurantsListScreen({super.key});
@@ -412,123 +444,125 @@ class RestaurantsListScreen extends GetView<RestaurantsListController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Container
-            Container(
-              height: 120,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-                image: restaurant.imagePath != null
-                    ? DecorationImage(
-                        image: AssetImage(restaurant.imagePath!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
+          // Image Container
+          Container(
+            height: 120,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
               ),
-              child: Stack(
-                children: [
-                  // Placeholder only if no image
-                  if (restaurant.imagePath == null)
-                    Center(
-                      child: Icon(
-                        Icons.restaurant,
-                        size: 40,
-                        color: Theme.of(context).primaryColor.withOpacity(0.3),
-                      ),
-                    ),
-                  // Favorite Star Icon
-                  Obx(() {
-                    final isFavorite = favoritesController.isFavorite(restaurant.id);
-                    return Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: () {
-                          controller.toggleFavorite(restaurant.id);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isFavorite ? Icons.star : Icons.star_border,
-                            color: isFavorite ? Colors.amber : Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
+              image: _buildRestaurantImageProvider(restaurant.imagePath) != null
+                  ? DecorationImage(
+                      image: _buildRestaurantImageProvider(restaurant.imagePath)!,
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
-            // Card Content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          restaurant.name,
-                          style: GoogleFonts.cairo(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on,
-                              size: 12,
-                              color: Colors.grey[500],
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              restaurant.distance,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.star,
-                              size: 12,
-                              color: Colors.amber,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              restaurant.rating.toString(),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.secondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+            child: Stack(
+              children: [
+                // Placeholder only if no valid image
+                if (_buildRestaurantImageProvider(restaurant.imagePath) == null)
+                  Center(
+                    child: Icon(
+                      Icons.restaurant,
+                      size: 40,
+                      color: Theme.of(context).primaryColor.withOpacity(0.3),
                     ),
-                    Container(
+                  ),
+                // Favorite Star Icon
+                Obx(() {
+                  final isFavorite = favoritesController.isFavorite(restaurant.id);
+                  return Positioned(
+                    top: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: () {
+                        controller.toggleFavorite(restaurant.id);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isFavorite ? Icons.star : Icons.star_border,
+                          color: isFavorite ? Colors.amber : Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          // Card Content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        restaurant.name,
+                        style: GoogleFonts.cairo(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: 12,
+                            color: Colors.grey[500],
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            restaurant.distance,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.star,
+                            size: 12,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            restaurant.rating.toString(),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 4,
@@ -537,20 +571,26 @@ class RestaurantsListScreen extends GetView<RestaurantsListController> {
                         color: Theme.of(context).primaryColor.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        restaurant.tables,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.secondary,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          restaurant.tables,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
+        ],
         ),
       ),
     );

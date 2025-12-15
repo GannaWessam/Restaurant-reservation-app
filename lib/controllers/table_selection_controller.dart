@@ -170,7 +170,7 @@ class TableSelectionController extends GetxController {
 
   // Load tables and reservations
   Future<void> loadTablesAndReservations() async {
-    if (_restaurant == null || _timeSlot == null) return;
+    if (_restaurant == null || _timeSlot == null || _scheduledDate == null) return;
 
     isLoading.value = true;
     
@@ -181,10 +181,12 @@ class TableSelectionController extends GetxController {
       // Generate table layout
       final generatedTables = _generateTableLayout(tableCount);
       
-      // Load existing reservations for this restaurant and time slot
-      final reservations = await _reservationsCrud.getReservationsByRestaurantAndTimeSlot(
+      // Load existing reservations for this restaurant, time slot and scheduled date
+      final reservations =
+          await _reservationsCrud.getReservationsByRestaurantTimeSlotAndDate(
         _restaurant!.name,
         _timeSlot!,
+        _scheduledDate!,
       );
       
       // Collect all booked seat IDs

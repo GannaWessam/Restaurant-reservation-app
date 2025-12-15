@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
+import '../db/restaurant_crud.dart';
 import 'my_reservations_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -12,6 +13,53 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
+  final RxMap<String, int> _categoryCounts = <String, int>{}.obs;
+  final RxBool _isLoadingCounts = true.obs;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategoryCounts();
+  }
+
+  Future<void> _loadCategoryCounts() async {
+    final RestaurantCrud restaurantCrud = Get.find<RestaurantCrud>();
+    final List<String> categories = [
+      'French Breakfast',
+      'American Breakfast',
+      'Egyptian Breakfast',
+      'Healthy Breakfast',
+      'Coffee Breakfast',
+      'Turkish Breakfast',
+      'Open Buffet Breakfast',
+    ];
+
+    _isLoadingCounts.value = true;
+
+    final Map<String, int> counts = {};
+    for (final category in categories) {
+      final count = await restaurantCrud.getRestaurantCountByCategory(category);
+      counts[category] = count;
+    }
+
+    _categoryCounts.value = counts;
+    _isLoadingCounts.value = false;
+  }
+
+  String _getCategoryDisplayText(String category) {
+    if (_isLoadingCounts.value) {
+      return 'Loading...';
+    }
+    final count = _categoryCounts.value[category] ?? 0;
+    if (count == 0) {
+      return 'Available soon';
+    } else if (count == 1) {
+      return '1 restaurant';
+    } else {
+      return '$count restaurants';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Get user name (mock for now)
@@ -262,7 +310,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   context,
                   'French Breakfast',
                   'FRENCH',
-                  '12 tables', //todo: num of restaurants in this category
                   'Butter croissants, seasonal jam and café au lait. Perfect for a light, slow morning with strong coffees and warm pastry aromas.',
                   'Peak: 9:00 AM',
                   'french.jpg',
@@ -274,7 +321,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   context,
                   'American Breakfast',
                   'AMERICAN',
-                  '8 tables',
                   'Fluffy pancakes, crispy bacon and sunny-side eggs. A hearty classic breakfast to fuel your morning.',
                   'Peak: 8:30 AM',
                   'american.jpg',
@@ -286,7 +332,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   context,
                   'Egyptian Breakfast',
                   'EGYPTIAN',
-                  '10 tables',
                   'Ful medames, fresh baladi bread and Egyptian tea. Traditional flavors to start your day authentically.',
                   'Peak: 7:00 AM',
                   'egypt.jpg',
@@ -298,7 +343,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   context,
                   'Healthy Breakfast',
                   'HEALTHY',
-                  '15 tables',
                   'Fresh fruit bowls, granola and smoothies. Nutritious options for a energizing morning.',
                   'Peak: 8:00 AM',
                   'healthy.jpg',
@@ -310,7 +354,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   context,
                   'Coffee Breakfast',
                   'COFFEE',
-                  '6 tables',
                   'Specialty coffee and artisan pastries. Perfect for coffee lovers seeking quality brews.',
                   'Peak: 9:30 AM',
                   'coffee.jpg',
@@ -322,7 +365,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   context,
                   'Turkish Breakfast',
                   'TURKISH',
-                  '9 tables',
                   'Cheese platter, olives, honey and Turkish tea. A rich spread of Mediterranean flavors.',
                   'Peak: 8:00 AM',
                   'Turkish breakfast.jpg',
@@ -334,7 +376,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   context,
                   'Open Buffet Breakfast',
                   'BUFFET',
-                  '20 tables',
                   'All-you-can-eat breakfast buffet. Variety of international dishes to satisfy every craving.',
                   'Peak: 9:00 AM',
                   'open buffet.jpg',
@@ -371,7 +412,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     BuildContext context,
     String title,
     String category,
-    String tables,
     String description,
     String peakTime,
     String? imagePath, // Will use this when images are provided
@@ -440,7 +480,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           ),
                         ),
                       ),
-                      Container(
+                      Obx(() => Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 3,
@@ -450,14 +490,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          tables,
+                          _getCategoryDisplayText(title),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: Theme.of(context).colorScheme.secondary,
                           ),
                         ),
-                      ),
+                      )),
                     ],
                   ),
                   const SizedBox(height: 6),

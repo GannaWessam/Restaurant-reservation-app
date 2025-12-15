@@ -47,7 +47,9 @@ class RestaurantModel {
       distance: json['distance'] as String? ?? 'Unknown distance',
       rating: (json['rating'] as num? ?? 0).toDouble(),
       tables: json['tables'] as String? ?? '0 tables',
-      imagePath: json['imagePath'] as String?,
+      // Firebase stores the image as base64 in "imageBase64"
+      // Map it into our local imagePath field
+      imagePath: (json['imageBase64'] ?? json['imagePath']) as String?,
       description: json['description'] as String?,
       timeSlots: json['timeSlots'] != null 
           ? List<String>.from(json['timeSlots'])

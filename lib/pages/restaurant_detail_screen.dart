@@ -1,11 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
 import '../models/restaurant_model.dart';
 import '../controllers/restaurant_detail_controller.dart';
 import '../controllers/favorites_controller.dart';
 import 'table_selection_screen.dart';
 import 'my_reservations_screen.dart';
+
+ImageProvider? _buildDetailImageProvider(String? imagePath) {
+  if (imagePath == null || imagePath.isEmpty) return null;
+
+  // Network URL
+  if (imagePath.startsWith('http')) {
+    return NetworkImage(imagePath);
+  }
+
+  // Asset path
+  if (imagePath.startsWith('assets/')) {
+    return AssetImage(imagePath);
+  }
+
+  // Base64 (with or without data URL prefix)
+  String base64String = imagePath;
+  if (base64String.startsWith('data:image')) {
+    final commaIndex = base64String.indexOf(',');
+    if (commaIndex != -1) {
+      base64String = base64String.substring(commaIndex + 1);
+    }
+  }
+
+  try {
+    final bytes = base64Decode(base64String);
+    return MemoryImage(bytes);
+  } catch (_) {
+    // If decoding fails, return null so placeholder can be shown
+    return null;
+  }
+}
 
 class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
   const RestaurantDetailScreen({super.key});
@@ -145,14 +177,14 @@ class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
-                        image: restaurant.imagePath != null
+                        image: _buildDetailImageProvider(restaurant.imagePath) != null
                             ? DecorationImage(
-                                image: AssetImage(restaurant.imagePath!),
+                                image: _buildDetailImageProvider(restaurant.imagePath)!,
                                 fit: BoxFit.cover,
                               )
                             : null,
                       ),
-                      child: restaurant.imagePath == null
+                      child: _buildDetailImageProvider(restaurant.imagePath) == null
                           ? Center(
                               child: Icon(
                                 Icons.restaurant,
@@ -243,6 +275,7 @@ class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
                         ),
                       ),
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
                             Icons.table_restaurant,
@@ -250,12 +283,16 @@ class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
                             size: 32,
                           ),
                           const SizedBox(width: 16),
-                          Text(
-                            restaurant.tables,
-                            style: GoogleFonts.cairo(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.green[700],
+                          Expanded(
+                            child: Text(
+                              restaurant.tables,
+                              style: GoogleFonts.cairo(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green[700],
+                              ),
+                              softWrap: true,
+                              overflow: TextOverflow.visible,
                             ),
                           ),
                         ],

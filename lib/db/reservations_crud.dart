@@ -19,14 +19,15 @@ class ReservationsCrud {
       await firestore.collection('reservations').doc(reservation.id).set(reservation.toJson());
       print('Reservation added: ${reservation.id}');
 
-      notificationService.sendNotificationToDevice(
-        serverKey: "YOUR_FIREBASE_SERVER_KEY",//todo
-        token: '',//todo
+      notificationService.sendNotificationToAllDevices(
+        //ghoniem's phone token (in our firbase project)
+        // token:"fyyVeXViTzO4pXgK9Rhu99:APA91bG_IX-hA3SeXI6FUEhZO5Zx1dZHJROkJ0jC_OtzZViv2oDqXsnu9wgatG9_Eb07024MZACM6-5MhDqjfx5dbElTuxD4UktrODaEN4NoOs7lRAo6_ro",
+        // token: "fMEi3k7oTsmtpj1cwZf173:APA91bFu_d5Ch6IXmtiLrb8aSjNSrEu2AbYRQRjFru_shbm-qa1VMY5UTo4a3Irvi4UHQR9Wq5QRyzzpGLhS9_BBhvIhv4xdMFqizqcgckW2h6RFA_3j_jY",
         title: "New Reservation",
         body: "A new table has been booked!",
         data: {
           "screen": "reservations",
-        },
+        }, reservedRestaurant: reservation.restaurantName,
       );
 
 
@@ -57,7 +58,7 @@ class ReservationsCrud {
     }
   }
 
-  // Get reservations by restaurant and time slot
+  // Get reservations by restaurant and time slot (across all dates)
   Future<List<ReservationModel>> getReservationsByRestaurantAndTimeSlot(
     String restaurantName,
     String timeSlot,
@@ -73,6 +74,36 @@ class ReservationsCrud {
           .toList();
     } catch (e) {
       print('Error getting reservations by restaurant and time slot: $e');
+      return [];
+    }
+  }
+
+  // Get reservations by restaurant, time slot, and scheduled date (single calendar day)
+  Future<List<ReservationModel>> getReservationsByRestaurantTimeSlotAndDate(
+    String restaurantName,
+    String timeSlot,
+    DateTime scheduledDate,
+  ) async {
+    try {
+      // Normalize to just the date part to be consistent
+      final normalizedDate = DateTime(
+        scheduledDate.year,
+        scheduledDate.month,
+        scheduledDate.day,
+      ).toIso8601String();
+
+      final reservationsSnapshot = await firestore
+          .collection('reservations')
+          .where('restaurantName', isEqualTo: restaurantName)
+          .where('timeSlot', isEqualTo: timeSlot)
+          .where('scheduledDate', isEqualTo: normalizedDate)
+          .get();
+
+      return reservationsSnapshot.docs
+          .map((reservation) => ReservationModel.fromJson(reservation.data()))
+          .toList();
+    } catch (e) {
+      print('Error getting reservations by restaurant, time slot and date: $e');
       return [];
     }
   }

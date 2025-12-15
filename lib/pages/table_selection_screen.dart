@@ -110,19 +110,22 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: SingleChildScrollView(
-                      child: SizedBox(
-                        height: 700,
-                        child: Stack(
-                          children: [
-                            // Tables with chairs
-                            ...controller.tables.map((table) {
-                              return Positioned(
-                                left: table['x'] as double,
-                                top: table['y'] as double,
-                                child: _buildTableWithChairs(context, table),
-                              );
-                            }).toList(),
-                          ],
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: SizedBox(
+                          height: 700,
+                          child: Stack(
+                            children: [
+                              // Tables with chairs
+                              ...controller.tables.map((table) {
+                                return Positioned(
+                                  left: table['x'] as double,
+                                  top: table['y'] as double,
+                                  child: _buildTableWithChairs(context, table),
+                                );
+                              }).toList(),
+                            ],
+                          ),
                         ),
                       ),
                     ),

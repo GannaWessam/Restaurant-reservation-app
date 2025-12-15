@@ -55,4 +55,15 @@ class RestaurantCrud {
       }
     }
 
+  Future<int> getRestaurantCountByCategory(String category) async {
+    try {
+      final restaurantsSnapshot =
+          await firestore.collection('restaurants').where('category', isEqualTo: category).get();
+      return restaurantsSnapshot.docs.length;
+    } catch (e) {
+      print('Error getting restaurant count by category: $e');
+      return 0;
+    }
+  }
+
 }
