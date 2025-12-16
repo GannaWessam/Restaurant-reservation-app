@@ -295,7 +295,22 @@ class RestaurantsListScreen extends GetView<RestaurantsListController> {
                     color: Theme.of(context).colorScheme.secondary,
                   ),
                 ),
-                
+                 const SizedBox(height: 12),
+
+                TextField(
+                  onChanged: controller.setSearchQuery,
+                  decoration: InputDecoration(
+                    hintText: 'Search restaurants...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 
                 // Filter Chips

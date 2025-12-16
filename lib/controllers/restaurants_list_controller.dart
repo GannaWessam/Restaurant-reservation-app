@@ -13,6 +13,8 @@ class RestaurantsListController extends GetxController {
   final RxString selectedFilter = 'All'.obs;
   final RxList<RestaurantModel> restaurants = <RestaurantModel>[].obs;
   final RxBool isLoading = false.obs;
+   final RxString searchQuery = ''.obs;
+
   
   // Internal state (not reactive - only used for logic)
   String _currentCategory = '';
@@ -32,6 +34,8 @@ class RestaurantsListController extends GetxController {
 
     _currentCategory = category;
     isLoading.value = true;
+     searchQuery.value = '';
+
 
     try {
       final List<RestaurantModel> loadedRestaurants = 
@@ -306,11 +310,23 @@ class RestaurantsListController extends GetxController {
   };
 
   // Get filtered restaurants (uses reactive restaurants list)
-  List<RestaurantModel> getFilteredRestaurants() {
+List<RestaurantModel> getFilteredRestaurants() {
+    List<RestaurantModel> list = restaurants.toList();
+
     if (selectedFilter.value == 'Favorite places') {
-      return _favoritesController.filterFavorites(restaurants, (r) => r.id);
+      list = list.where((r) => _favoritesController.isFavorite(r.id)).toList();
     }
-    return restaurants;
+
+    if (searchQuery.value.isNotEmpty) {
+      final query = searchQuery.value.toLowerCase();
+      list = list
+          .where(
+            (r) => r.name.toLowerCase().contains(query),
+          )
+          .toList();
+    }
+
+    return list;
   }
 
   // Get favorite count for current restaurants
@@ -334,5 +350,10 @@ class RestaurantsListController extends GetxController {
   Future<void> toggleFavorite(String restaurantId) async {
     await _favoritesController.toggleFavorite(restaurantId);
   }
+
+   void setSearchQuery(String value) {
+    searchQuery.value = value;
+  }
+
 }
 
