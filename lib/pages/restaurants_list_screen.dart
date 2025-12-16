@@ -425,172 +425,329 @@ class RestaurantsListScreen extends GetView<RestaurantsListController> {
     );
   }
 
+  // Widget _buildRestaurantCard(
+  //   BuildContext context,
+  //   RestaurantModel restaurant,
+  //   FavoritesController favoritesController,
+  // ) {
+  //   return Card(
+  //     elevation: 1.5,
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.circular(16),
+  //     ),
+  //     margin: EdgeInsets.zero,
+  //     child: InkWell(
+  //       onTap: () {
+  //         Get.toNamed('/restaurant-detail', arguments: restaurant);
+  //       },
+  //       borderRadius: BorderRadius.circular(16),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //         // Image Container
+  //         Container(
+  //           height: 120,
+  //           width: double.infinity,
+  //           decoration: BoxDecoration(
+  //             color: Theme.of(context).colorScheme.surface,
+  //             borderRadius: const BorderRadius.only(
+  //               topLeft: Radius.circular(16),
+  //               topRight: Radius.circular(16),
+  //             ),
+  //             image: _buildRestaurantImageProvider(restaurant.imagePath) != null
+  //                 ? DecorationImage(
+  //                     image: _buildRestaurantImageProvider(restaurant.imagePath)!,
+  //                     fit: BoxFit.cover,
+  //                   )
+  //                 : null,
+  //           ),
+  //           child: Stack(
+  //             children: [
+  //               // Placeholder only if no valid image
+  //               if (_buildRestaurantImageProvider(restaurant.imagePath) == null)
+  //                 Center(
+  //                   child: Icon(
+  //                     Icons.restaurant,
+  //                     size: 40,
+  //                     color: Theme.of(context).primaryColor.withOpacity(0.3),
+  //                   ),
+  //                 ),
+  //               // Favorite Star Icon
+  //               Obx(() {
+  //                 final isFavorite = favoritesController.isFavorite(restaurant.id);
+  //                 return Positioned(
+  //                   top: 8,
+  //                   right: 8,
+  //                   child: GestureDetector(
+  //                     onTap: () {
+  //                       controller.toggleFavorite(restaurant.id);
+  //                     },
+  //                     child: Container(
+  //                       padding: const EdgeInsets.all(6),
+  //                       decoration: BoxDecoration(
+  //                         color: Colors.black.withOpacity(0.5),
+  //                         shape: BoxShape.circle,
+  //                       ),
+  //                       child: Icon(
+  //                         isFavorite ? Icons.star : Icons.star_border,
+  //                         color: isFavorite ? Colors.amber : Colors.white,
+  //                         size: 20,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 );
+  //               }),
+  //             ],
+  //           ),
+  //         ),
+  //         // Card Content
+  //         Expanded(
+  //           child: Padding(
+  //             padding: const EdgeInsets.all(10),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //               children: [
+  //                 Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     Text(
+  //                       restaurant.name,
+  //                       style: GoogleFonts.cairo(
+  //                         fontSize: 14,
+  //                         fontWeight: FontWeight.bold,
+  //                         color: Theme.of(context).colorScheme.secondary,
+  //                       ),
+  //                       maxLines: 1,
+  //                       overflow: TextOverflow.ellipsis,
+  //                     ),
+  //                     const SizedBox(height: 4),
+  //                     Row(
+  //                       children: [
+  //                         Icon(
+  //                           Icons.location_on,
+  //                           size: 12,
+  //                           color: Colors.grey[500],
+  //                         ),
+  //                         const SizedBox(width: 2),
+  //                         Text(
+  //                           restaurant.distance,
+  //                           style: TextStyle(
+  //                             fontSize: 11,
+  //                             color: Colors.grey[600],
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                     const SizedBox(height: 4),
+  //                     Row(
+  //                       children: [
+  //                         Icon(
+  //                           Icons.star,
+  //                           size: 12,
+  //                           color: Colors.amber,
+  //                         ),
+  //                         const SizedBox(width: 2),
+  //                         Text(
+  //                           restaurant.rating.toString(),
+  //                           style: TextStyle(
+  //                             fontSize: 11,
+  //                             fontWeight: FontWeight.w600,
+  //                             color: Theme.of(context).colorScheme.secondary,
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 Padding(
+  //                   padding: const EdgeInsets.only(bottom: 8),
+  //                   child: Container(
+  //                     padding: const EdgeInsets.symmetric(
+  //                       horizontal: 8,
+  //                       vertical: 4,
+  //                     ),
+  //                     decoration: BoxDecoration(
+  //                       color: Theme.of(context).primaryColor.withOpacity(0.2),
+  //                       borderRadius: BorderRadius.circular(8),
+  //                     ),
+  //                     child: Padding(
+  //                       padding: const EdgeInsets.only(bottom: 16),
+  //                       child: Text(
+  //                         restaurant.tables,
+  //                         style: TextStyle(
+  //                           fontSize: 10,
+  //                           fontWeight: FontWeight.w600,
+  //                           color: Theme.of(context).colorScheme.secondary,
+  //                         ),
+  //                         softWrap: true,
+  //                         overflow: TextOverflow.visible,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //       ),
+  //     ),
+  //   );
+  // }
   Widget _buildRestaurantCard(
-    BuildContext context,
-    RestaurantModel restaurant,
-    FavoritesController favoritesController,
-  ) {
+      BuildContext context,
+      RestaurantModel restaurant,
+      FavoritesController favoritesController,
+      ) {
+    // ✅ Declare imageProvider OUTSIDE widget tree
+    final imageProvider =
+    _buildRestaurantImageProvider(restaurant.imagePath);
+
     return Card(
-      elevation: 1.5,
+      elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       margin: EdgeInsets.zero,
       child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           Get.toNamed('/restaurant-detail', arguments: restaurant);
         },
-        borderRadius: BorderRadius.circular(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          // Image Container
-          Container(
-            height: 120,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+            /// IMAGE
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                  color: Theme.of(context).colorScheme.surface,
+                  image: imageProvider != null
+                      ? DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  )
+                      : null,
+                ),
+                child: imageProvider == null
+                    ? Center(
+                  child: Icon(
+                    Icons.restaurant,
+                    size: 42,
+                    color: Theme.of(context)
+                        .primaryColor
+                        .withOpacity(0.3),
+                  ),
+                )
+                    : null,
               ),
-              image: _buildRestaurantImageProvider(restaurant.imagePath) != null
-                  ? DecorationImage(
-                      image: _buildRestaurantImageProvider(restaurant.imagePath)!,
-                      fit: BoxFit.cover,
-                    )
-                  : null,
             ),
-            child: Stack(
-              children: [
-                // Placeholder only if no valid image
-                if (_buildRestaurantImageProvider(restaurant.imagePath) == null)
-                  Center(
-                    child: Icon(
-                      Icons.restaurant,
-                      size: 40,
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
-                    ),
-                  ),
-                // Favorite Star Icon
-                Obx(() {
-                  final isFavorite = favoritesController.isFavorite(restaurant.id);
-                  return Positioned(
-                    top: 8,
-                    right: 8,
-                    child: GestureDetector(
-                      onTap: () {
-                        controller.toggleFavorite(restaurant.id);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isFavorite ? Icons.star : Icons.star_border,
-                          color: isFavorite ? Colors.amber : Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-          // Card Content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        restaurant.name,
-                        style: GoogleFonts.cairo(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 12,
-                            color: Colors.grey[500],
+
+            /// CONTENT
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          restaurant.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.cairo(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .secondary,
                           ),
-                          const SizedBox(width: 2),
-                          Text(
-                            restaurant.distance,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[600],
+                        ),
+                        const SizedBox(height: 4),
+
+                        /// LOCATION
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on,
+                              size: 12,
+                              color: Colors.grey,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 12,
-                            color: Colors.amber,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            restaurant.rating.toString(),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.secondary,
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                restaurant.distance,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Container(
+                          ],
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        /// RATING
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              size: 12,
+                              color: Colors.amber,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              restaurant.rating.toString(),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    /// TABLES CHIP
+                    Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 4,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.2),
+                        color: Theme.of(context)
+                            .primaryColor
+                            .withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Text(
-                          restaurant.tables,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                          softWrap: true,
-                          overflow: TextOverflow.visible,
+                      child: Text(
+                        restaurant.tables,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
