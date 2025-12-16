@@ -13,6 +13,7 @@ import 'package:restaurant_reservation_app/db/vendor_crud.dart';
 import 'package:restaurant_reservation_app/services/auth_service.dart';
 import 'package:restaurant_reservation_app/db/reservations_crud.dart';
 import 'package:restaurant_reservation_app/db/restaurant_crud.dart';
+import 'package:restaurant_reservation_app/db/category_crud.dart';
 import 'package:restaurant_reservation_app/db/user_crud.dart';
 import 'package:restaurant_reservation_app/db/db_instance.dart';
 import 'package:restaurant_reservation_app/services/notification_service.dart';
@@ -124,6 +125,7 @@ void main() async {
   Get.put(NotificationService(), permanent: true);
   Get.put(ReservationsCrud(), permanent: true);
   Get.put(RestaurantCrud(), permanent: true);
+  Get.put(CategoryCrud(), permanent: true);
   Get.put(UserCrud(), permanent: true);
   // Get.put(VendorCrud(), permanent: true);
 

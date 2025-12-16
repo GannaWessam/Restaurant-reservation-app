@@ -213,21 +213,6 @@ class RestaurantDetailScreen extends GetView<RestaurantDetailController> {
                             color: Colors.grey[700],
                           ),
                         ),
-                        const SizedBox(width: 20),
-                        Icon(
-                          Icons.star,
-                          size: 20,
-                          color: Colors.amber,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          restaurant.rating.toString(),
-                          style: GoogleFonts.tajawal(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                        ),
                       ],
                     ),
                     

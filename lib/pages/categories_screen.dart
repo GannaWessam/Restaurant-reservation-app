@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
-import '../db/restaurant_crud.dart';
+import '../db/category_crud.dart';
+import '../models/category_model.dart';
 import 'my_reservations_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -13,44 +15,37 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  final RxMap<String, int> _categoryCounts = <String, int>{}.obs;
-  final RxBool _isLoadingCounts = true.obs;
+  final RxList<CategoryModel> _categories = <CategoryModel>[].obs;
+  final RxBool _isLoading = true.obs;
 
   @override
   void initState() {
     super.initState();
-    _loadCategoryCounts();
+    _loadCategories();
   }
 
-  Future<void> _loadCategoryCounts() async {
-    final RestaurantCrud restaurantCrud = Get.find<RestaurantCrud>();
-    final List<String> categories = [
-      'French Breakfast',
-      'American Breakfast',
-      'Egyptian Breakfast',
-      'Healthy Breakfast',
-      'Coffee Breakfast',
-      'Turkish Breakfast',
-      'Open Buffet Breakfast',
-    ];
-
-    _isLoadingCounts.value = true;
-
-    final Map<String, int> counts = {};
-    for (final category in categories) {
-      final count = await restaurantCrud.getRestaurantCountByCategory(category);
-      counts[category] = count;
+  Future<void> _loadCategories() async {
+    _isLoading.value = true;
+    
+    try {
+      final CategoryCrud categoryCrud = Get.find<CategoryCrud>();
+      
+      // Fetch categories from Firebase (restaurantCount is already stored in each category)
+      final categories = await categoryCrud.getAllCategories();
+      
+      _categories.value = categories;
+    } catch (e) {
+      print('Error loading categories: $e');
+    } finally {
+      _isLoading.value = false;
     }
-
-    _categoryCounts.value = counts;
-    _isLoadingCounts.value = false;
   }
 
-  String _getCategoryDisplayText(String category) {
-    if (_isLoadingCounts.value) {
+  String _getCategoryDisplayText(CategoryModel category) {
+    if (_isLoading.value) {
       return 'Loading...';
     }
-    final count = _categoryCounts.value[category] ?? 0;
+    final count = category.restaurantCount;
     if (count == 0) {
       return 'Available soon';
     } else if (count == 1) {
@@ -63,7 +58,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     // Get user name (mock for now)
-    final String userName = 'User';
+    final String userName = '';///USER NAME
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -224,56 +219,56 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Last booking',
+                                    'discover our categories',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: Colors.grey[600],
                                     ),
                                   ),
                                   const SizedBox(height: 3),
-                                  Text(
-                                    'Yesterday • 9:10 AM',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.secondary,
-                                    ),
-                                  ),
+                                  Obx(() => Text(
+                                        'Available Categories is ${_categories.length}',
+                                        style: GoogleFonts.cairo(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Theme.of(context).colorScheme.secondary,
+                                        ),
+                                      )),
                                 ],
                               ),
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Restaurants near',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    '14 in your area',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.secondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          // Expanded(
+                          //   child: Container(
+                          //     padding: const EdgeInsets.all(10),
+                          //     decoration: BoxDecoration(
+                          //       color: Colors.white,
+                          //       borderRadius: BorderRadius.circular(10),
+                          //     ),
+                          //     child: Column(
+                          //       crossAxisAlignment: CrossAxisAlignment.start,
+                          //       children: [
+                          //         Text(
+                          //           'Restaurants near',
+                          //           style: TextStyle(
+                          //             fontSize: 10,
+                          //             color: Colors.grey[600],
+                          //           ),
+                          //         ),
+                          //         const SizedBox(height: 3),
+                          //         Text(
+                          //           '14 in your area',
+                          //           style: GoogleFonts.cairo(
+                          //             fontSize: 11,
+                          //             fontWeight: FontWeight.w600,
+                          //             color: Theme.of(context).colorScheme.secondary,
+                          //           ),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ],
@@ -305,81 +300,68 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 
                 const SizedBox(height: 20),
                 
-                // Breakfast Category Cards with Images
-                _buildBreakfastCard(
-                  context,
-                  'French Breakfast',
-                  'FRENCH',
-                  'Butter croissants, seasonal jam and café au lait. Perfect for a light, slow morning with strong coffees and warm pastry aromas.',
-                  'Peak: 9:00 AM',
-                  'french.jpg',
-                ),
-                
-                const SizedBox(height: 12),
-                
-                _buildBreakfastCard(
-                  context,
-                  'American Breakfast',
-                  'AMERICAN',
-                  'Fluffy pancakes, crispy bacon and sunny-side eggs. A hearty classic breakfast to fuel your morning.',
-                  'Peak: 8:30 AM',
-                  'american.jpg',
-                ),
-                
-                const SizedBox(height: 12),
-                
-                _buildBreakfastCard(
-                  context,
-                  'Egyptian Breakfast',
-                  'EGYPTIAN',
-                  'Ful medames, fresh baladi bread and Egyptian tea. Traditional flavors to start your day authentically.',
-                  'Peak: 7:00 AM',
-                  'egypt.jpg',
-                ),
-                
-                const SizedBox(height: 12),
-                
-                _buildBreakfastCard(
-                  context,
-                  'Healthy Breakfast',
-                  'HEALTHY',
-                  'Fresh fruit bowls, granola and smoothies. Nutritious options for a energizing morning.',
-                  'Peak: 8:00 AM',
-                  'healthy.jpg',
-                ),
-                
-                const SizedBox(height: 12),
-                
-                _buildBreakfastCard(
-                  context,
-                  'Coffee Breakfast',
-                  'COFFEE',
-                  'Specialty coffee and artisan pastries. Perfect for coffee lovers seeking quality brews.',
-                  'Peak: 9:30 AM',
-                  'coffee.jpg',
-                ),
-                
-                const SizedBox(height: 12),
-                
-                _buildBreakfastCard(
-                  context,
-                  'Turkish Breakfast',
-                  'TURKISH',
-                  'Cheese platter, olives, honey and Turkish tea. A rich spread of Mediterranean flavors.',
-                  'Peak: 8:00 AM',
-                  'Turkish breakfast.jpg',
-                ),
-                
-                const SizedBox(height: 12),
-                
-                _buildBreakfastCard(
-                  context,
-                  'Open Buffet Breakfast',
-                  'BUFFET',
-                  'All-you-can-eat breakfast buffet. Variety of international dishes to satisfy every craving.',
-                  'Peak: 9:00 AM',
-                  'open buffet.jpg',
-                ),
+                // Breakfast Category Cards with Images - Dynamically loaded from Firebase
+                Obx(() {
+                  if (_isLoading.value) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+                  
+                  if (_categories.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(40.0),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.restaurant_menu,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No categories available',
+                              style: GoogleFonts.cairo(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Check back later for new categories',
+                              style: GoogleFonts.tajawal(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  return Column(
+                    children: _categories.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final category = entry.value;
+                      return Column(
+                        children: [
+                          if (index > 0) const SizedBox(height: 12),
+                          _buildBreakfastCard(
+                            context,
+                            category,
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  );
+                }),
               ],
             ),
           ),
@@ -410,12 +392,32 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   Widget _buildBreakfastCard(
     BuildContext context,
-    String title,
-    String category,
-    String description,
-    String peakTime,
-    String? imagePath, // Will use this when images are provided
+    CategoryModel category,
   ) {
+    // Helper to build image provider from base64
+    ImageProvider? _buildImageProvider(String? imageBase64) {
+      if (imageBase64 == null || imageBase64.isEmpty) return null;
+      
+      try {
+        // Handle data URL prefix if present
+        String base64String = imageBase64;
+        if (base64String.startsWith('data:image')) {
+          final commaIndex = base64String.indexOf(',');
+          if (commaIndex != -1) {
+            base64String = base64String.substring(commaIndex + 1);
+          }
+        }
+        
+        final bytes = base64Decode(base64String);
+        return MemoryImage(bytes);
+      } catch (e) {
+        print('Error decoding base64 image: $e');
+        return null;
+      }
+    }
+    
+    final imageProvider = _buildImageProvider(category.imageBase64);
+    
     return Card(
       elevation: 1.5,
       shape: RoundedRectangleBorder(
@@ -424,13 +426,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       margin: EdgeInsets.zero,
       child: InkWell(
         onTap: () {
-          Get.toNamed('/restaurants', arguments: {'category': title});
+          Get.toNamed('/restaurants', arguments: {'category': category.name});
         },
         borderRadius: BorderRadius.circular(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Container with real breakfast images (Smaller)
+            // Image Container
             Container(
               height: 140,
               width: double.infinity,
@@ -440,26 +442,22 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                 ),
-                image: imagePath != null
+                image: imageProvider != null
                     ? DecorationImage(
-                        image: AssetImage(imagePath),
+                        image: imageProvider,
                         fit: BoxFit.cover,
                       )
                     : null,
               ),
-              child: Stack(
-                children: [
-                  // Placeholder only if no image
-                  if (imagePath == null)
-                    Center(
+              child: imageProvider == null
+                  ? Center(
                       child: Icon(
                         Icons.restaurant_menu,
                         size: 60,
                         color: Theme.of(context).primaryColor.withOpacity(0.3),
                       ),
-                    ),
-                ],
-              ),
+                    )
+                  : null,
             ),
             // Card Content (More compact)
             Padding(
@@ -472,7 +470,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          title,
+                          category.name,
                           style: GoogleFonts.cairo(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -490,7 +488,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          _getCategoryDisplayText(title),
+                          _getCategoryDisplayText(category),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -502,7 +500,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    description,
+                    category.description ?? 'Discover delicious breakfast options.',
                     style: GoogleFonts.tajawal(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -516,7 +514,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        peakTime,
+                        category.peakTime ?? 'Peak: 9:00 AM',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey[500],
@@ -525,7 +523,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Get.toNamed('/restaurants', arguments: {'category': title});
+                          Get.toNamed('/restaurants', arguments: {'category': category.name});
                         },
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,

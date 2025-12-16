@@ -237,46 +237,46 @@ class RestaurantsListScreen extends GetView<RestaurantsListController> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Average rating',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.star,
-                                          size: 12,
-                                          color: Colors.amber,
-                                        ),
-                                        const SizedBox(width: 2),
-                                        Text(
-                                          averageRating.toStringAsFixed(1),
-                                          style: GoogleFonts.cairo(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            color: Theme.of(context).colorScheme.secondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                            // Expanded(
+                            //   child: Container(
+                            //     padding: const EdgeInsets.all(10),
+                            //     decoration: BoxDecoration(
+                            //       color: Colors.white,
+                            //       borderRadius: BorderRadius.circular(10),
+                            //     ),
+                            //     child: Column(
+                            //       crossAxisAlignment: CrossAxisAlignment.start,
+                            //       children: [
+                            //         Text(
+                            //           'Average rating',
+                            //           style: TextStyle(
+                            //             fontSize: 10,
+                            //             color: Colors.grey[600],
+                            //           ),
+                            //         ),
+                            //         const SizedBox(height: 3),
+                            //         Row(
+                            //           children: [
+                            //             const Icon(
+                            //               Icons.star,
+                            //               size: 12,
+                            //               color: Colors.amber,
+                            //             ),
+                            //             const SizedBox(width: 2),
+                            //             Text(
+                            //               averageRating.toStringAsFixed(1),
+                            //               style: GoogleFonts.cairo(
+                            //                 fontSize: 11,
+                            //                 fontWeight: FontWeight.w600,
+                            //                 color: Theme.of(context).colorScheme.secondary,
+                            //               ),
+                            //             ),
+                            //           ],
+                            //         ),
+                            //       ],
+                            //     ),
+                            //   ),
+                            // ),
                           ],
                         ),
                       ],
@@ -698,24 +698,33 @@ class RestaurantsListScreen extends GetView<RestaurantsListController> {
 
                         const SizedBox(height: 4),
 
-                        /// RATING
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star,
-                              size: 12,
-                              color: Colors.amber,
+                        /// FAVORITE
+                        Obx(() {
+                          final isFavorite = favoritesController.isFavorite(restaurant.id);
+                          return GestureDetector(
+                            onTap: () {
+                              controller.toggleFavorite(restaurant.id);
+                            },
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isFavorite ? Icons.star : Icons.star_border,
+                                  size: 12,
+                                  color: isFavorite ? Colors.amber : Colors.grey,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  isFavorite ? 'Favorite' : 'Add to favorites',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isFavorite ? Colors.amber : Colors.grey,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 2),
-                            Text(
-                              restaurant.rating.toString(),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                        }),
                       ],
                     ),
 
