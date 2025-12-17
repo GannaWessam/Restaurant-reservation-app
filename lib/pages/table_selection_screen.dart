@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -341,48 +342,33 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
     final isBooked = chair['booked'] as bool;
 
     const double baseOffset = 50.0;
-    const double chairDistance = 20.0;  // Increased spacing from table
-    const double chairWidth = 32.0;     // Slightly larger chairs
-    const double chairHeight = 36.0;
+    const double chairDistance = 25.0;  // Distance from table edge
+    const double chairSize = 34.0;      // Square chairs for cleaner look
 
     double getLeft() {
-      final centerX = baseOffset + tableWidth / 2;
-      switch (position) {
-        case 'top':
-        case 'bottom':
-          return centerX - chairWidth / 2;
-        case 'top-right':
-        case 'bottom-right':
-          return centerX + 35;  // Increased offset for corner chairs
-        case 'right':
-          return baseOffset + tableWidth + chairDistance;
-        case 'left':
-          return baseOffset - chairDistance - chairWidth;
-        case 'top-left':
-        case 'bottom-left':
-          return centerX - 35 - chairWidth;  // Increased offset for corner chairs
-        default:
-          return centerX;
+      if (position == 'angle') {
+        final angle = chair['angle'] as double;
+        final centerX = baseOffset + tableWidth / 2;
+        final radius = (tableWidth / 2) + chairDistance;
+        
+        // Convert angle to radians and calculate X position
+        final angleRad = angle * math.pi / 180;
+        return centerX + radius * math.cos(angleRad) - chairSize / 2;
       }
+      return baseOffset;
     }
 
     double getTop() {
-      final centerY = baseOffset + tableHeight / 2;
-      switch (position) {
-        case 'top':
-        case 'top-right':
-        case 'top-left':
-          return baseOffset - chairDistance - chairHeight;
-        case 'bottom':
-        case 'bottom-right':
-        case 'bottom-left':
-          return baseOffset + tableHeight + chairDistance;
-        case 'right':
-        case 'left':
-          return centerY - chairHeight / 2;
-        default:
-          return centerY;
+      if (position == 'angle') {
+        final angle = chair['angle'] as double;
+        final centerY = baseOffset + tableHeight / 2;
+        final radius = (tableHeight / 2) + chairDistance;
+        
+        // Convert angle to radians and calculate Y position
+        final angleRad = angle * math.pi / 180;
+        return centerY + radius * math.sin(angleRad) - chairSize / 2;
       }
+      return baseOffset;
     }
 
     return Obx(() {
@@ -399,20 +385,20 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
                 }
               : null,
           child: Container(
-            width: chairWidth,
-            height: chairHeight,
+            width: chairSize,
+            height: chairSize,
             decoration: BoxDecoration(
               color: isBooked || !isAvailable
                   ? Colors.red[600]
                   : isSelected
                       ? const Color(0xFF8D6E63)
                       : Colors.green[600],
-              borderRadius: BorderRadius.circular(6),
+              shape: BoxShape.circle,  // Circular chairs for better look
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),

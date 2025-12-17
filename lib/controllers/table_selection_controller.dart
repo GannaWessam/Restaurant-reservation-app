@@ -46,139 +46,128 @@ class TableSelectionController extends GetxController {
     }
   }
 
-  // Parse number of tables from restaurant.tables string 
+  // Parse table and seat information from restaurant.tables string 
   // Handles formats like: "15 tables" or "Table 1: 6 seats, Table 2: 5 seats, Table 3: 4 seats"
-  int _parseTableCount(String tablesString) {
+  // Returns a list of maps with table info: [{'tableNumber': 1, 'seats': 6}, {'tableNumber': 2, 'seats': 5}, ...]
+  List<Map<String, int>> _parseTableInfo(String tablesString) {
     try {
-      // Check if the format is "Table X:" (count occurrences of "Table")
-      final tableMatches = RegExp(r'Table\s+\d+', caseSensitive: false).allMatches(tablesString);
+      final List<Map<String, int>> tableInfoList = [];
+      
+      // Check if the format is "Table X: Y seats"
+      final tableMatches = RegExp(r'Table\s+(\d+):\s*(\d+)\s*seats?', caseSensitive: false).allMatches(tablesString);
+      
       if (tableMatches.isNotEmpty) {
-        print('Found ${tableMatches.length} tables in: $tablesString');
-        return tableMatches.length;
+        for (var match in tableMatches) {
+          final tableNumber = int.parse(match.group(1)!);
+          final seatCount = int.parse(match.group(2)!);
+          tableInfoList.add({'tableNumber': tableNumber, 'seats': seatCount});
+        }
+        print('Parsed table info: $tableInfoList');
+        return tableInfoList;
       }
       
-      // Otherwise, try to extract number from formats like "15 tables"
+      // Otherwise, try to extract number from formats like "15 tables" and use default seat counts
       final match = RegExp(r'(\d+)\s*tables?', caseSensitive: false).firstMatch(tablesString);
       if (match != null) {
-        return int.parse(match.group(1)!);
+        final tableCount = int.parse(match.group(1)!);
+        // Create default tables with 4 seats each
+        for (int i = 1; i <= tableCount; i++) {
+          tableInfoList.add({'tableNumber': i, 'seats': 4});
+        }
+        return tableInfoList;
       }
       
       // If nothing matches, return default
-      print('Could not parse table count from: $tablesString, using default');
-      return 6; // Default fallback
+      print('Could not parse table info from: $tablesString, using default');
+      return [
+        {'tableNumber': 1, 'seats': 4},
+        {'tableNumber': 2, 'seats': 4},
+        {'tableNumber': 3, 'seats': 6},
+      ];
     } catch (e) {
-      print('Error parsing table count: $e');
-      return 6; // Default fallback
+      print('Error parsing table info: $e');
+      return [
+        {'tableNumber': 1, 'seats': 4},
+        {'tableNumber': 2, 'seats': 4},
+      ];
     }
   }
 
-  // Generate table layout based on number of tables
-  List<Map<String, dynamic>> _generateTableLayout(int tableCount) {
+  // Generate table layout based on parsed table information
+  List<Map<String, dynamic>> _generateTableLayout(List<Map<String, int>> tableInfoList) {
     final List<Map<String, dynamic>> generatedTables = [];
     
-    // Predefined layouts for different table counts with much better spacing
-    final List<List<Map<String, dynamic>>> layouts = [
-      // Layout for 1-3 tables (well-spaced)
-      <Map<String, dynamic>>[
-        <String, dynamic>{'x': 50.0, 'y': 50.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 50.0, 'y': 250.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 50.0, 'y': 450.0, 'shape': 'round', 'size': 80.0, 'chairs': 6},
-      ],
-      // Layout for 4-6 tables (well-spaced)
-      <Map<String, dynamic>>[
-        <String, dynamic>{'x': 40.0, 'y': 40.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 240.0, 'y': 40.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 130.0, 'y': 230.0, 'shape': 'round', 'size': 80.0, 'chairs': 8},
-        <String, dynamic>{'x': 40.0, 'y': 450.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 240.0, 'y': 450.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 100.0, 'y': 630.0, 'shape': 'rectangle', 'size': 60.0, 'width': 120.0, 'chairs': 6},
-      ],
-      // Layout for 7+ tables (well-spaced)
-      <Map<String, dynamic>>[
-        <String, dynamic>{'x': 40.0, 'y': 40.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 250.0, 'y': 40.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 140.0, 'y': 240.0, 'shape': 'round', 'size': 80.0, 'chairs': 8},
-        <String, dynamic>{'x': 40.0, 'y': 480.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 250.0, 'y': 480.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 110.0, 'y': 660.0, 'shape': 'rectangle', 'size': 60.0, 'width': 120.0, 'chairs': 6},
-        <String, dynamic>{'x': 380.0, 'y': 150.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 380.0, 'y': 380.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-      ],
-    ];
-
-    final layoutIndex = tableCount <= 3 ? 0 : (tableCount <= 6 ? 1 : 2);
-    final baseLayout = layouts[layoutIndex];
-    
     int chairIdCounter = 1;
+    double yPosition = 50.0;
+    const double verticalSpacing = 220.0;
+    const double xPosition = 50.0;
     
-    for (int i = 0; i < tableCount && i < baseLayout.length; i++) {
-      final tableConfig = baseLayout[i];
-      final tableId = i + 1;
-      final numChairs = tableConfig['chairs'] as int;
+    for (var tableInfo in tableInfoList) {
+      final tableId = tableInfo['tableNumber']!;
+      final numChairs = tableInfo['seats']!;
       
-      // Generate chairs based on shape
-      final List<Map<String, dynamic>> chairs = [];
-      if (tableConfig['shape'] == 'round') {
-        if (numChairs == 4) {
-          chairs.addAll([
-            {'id': chairIdCounter++, 'position': 'top', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'right', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'bottom', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'left', 'booked': false},
-          ]);
-        } else if (numChairs == 6) {
-          chairs.addAll([
-            {'id': chairIdCounter++, 'position': 'top-left', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'top', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'top-right', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'bottom-right', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'bottom', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'bottom-left', 'booked': false},
-          ]);
-        } else if (numChairs == 8) {
-          chairs.addAll([
-            {'id': chairIdCounter++, 'position': 'top-left', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'top', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'top-right', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'right', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'bottom-right', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'bottom', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'bottom-left', 'booked': false},
-            {'id': chairIdCounter++, 'position': 'left', 'booked': false},
-          ]);
-        }
-      } else if (tableConfig['shape'] == 'square') {
-        chairs.addAll([
-          {'id': chairIdCounter++, 'position': 'top', 'booked': false},
-          {'id': chairIdCounter++, 'position': 'right', 'booked': false},
-          {'id': chairIdCounter++, 'position': 'bottom', 'booked': false},
-          {'id': chairIdCounter++, 'position': 'left', 'booked': false},
-        ]);
-      } else if (tableConfig['shape'] == 'rectangle') {
-        chairs.addAll([
-          {'id': chairIdCounter++, 'position': 'top-left', 'booked': false},
-          {'id': chairIdCounter++, 'position': 'top-right', 'booked': false},
-          {'id': chairIdCounter++, 'position': 'right', 'booked': false},
-          {'id': chairIdCounter++, 'position': 'bottom-right', 'booked': false},
-          {'id': chairIdCounter++, 'position': 'bottom-left', 'booked': false},
-          {'id': chairIdCounter++, 'position': 'left', 'booked': false},
-        ]);
+      // Determine table shape and size based on number of chairs
+      String shape;
+      double size;
+      double? width;
+      
+      if (numChairs <= 4) {
+        shape = 'square';
+        size = 50.0;
+      } else if (numChairs <= 6) {
+        shape = 'round';
+        size = 70.0;
+      } else if (numChairs <= 8) {
+        shape = 'round';
+        size = 80.0;
+      } else {
+        shape = 'rectangle';
+        size = 60.0;
+        width = 140.0;
       }
+      
+      // Generate chairs dynamically based on actual seat count
+      final List<Map<String, dynamic>> chairs = _generateChairsForTable(numChairs, chairIdCounter);
+      chairIdCounter += numChairs;
 
       final table = {
         'id': tableId,
-        'x': tableConfig['x'] as double,
-        'y': tableConfig['y'] as double,
-        'shape': tableConfig['shape'] as String,
-        'size': tableConfig['size'] as double,
-        if (tableConfig['width'] != null) 'width': tableConfig['width'] as double,
+        'x': xPosition,
+        'y': yPosition,
+        'shape': shape,
+        'size': size,
+        if (width != null) 'width': width,
         'chairs': chairs,
       };
       
       generatedTables.add(table);
+      yPosition += verticalSpacing;
     }
     
     return generatedTables;
+  }
+
+  // Generate chairs for a table based on seat count using angular distribution
+  List<Map<String, dynamic>> _generateChairsForTable(int numChairs, int startingChairId) {
+    final List<Map<String, dynamic>> chairs = [];
+    int chairId = startingChairId;
+    
+    // Use angular distribution for even spacing around the table
+    // Start from top (-90 degrees) and go clockwise
+    for (int i = 0; i < numChairs; i++) {
+      // Calculate angle for even distribution (starting from top)
+      // -90 degrees (top) and going clockwise
+      final angle = -90 + (360 / numChairs) * i;
+      
+      chairs.add({
+        'id': chairId++,
+        'position': 'angle',
+        'angle': angle,
+        'booked': false,
+      });
+    }
+    
+    return chairs;
   }
 
   // Load tables and reservations
@@ -188,11 +177,11 @@ class TableSelectionController extends GetxController {
     isLoading.value = true;
     
     try {
-      // Parse table count from restaurant.tables
-      final tableCount = _parseTableCount(_restaurant!.tables);
+      // Parse table information from restaurant.tables
+      final tableInfoList = _parseTableInfo(_restaurant!.tables);
       
-      // Generate table layout
-      final generatedTables = _generateTableLayout(tableCount);
+      // Generate table layout with actual seat counts
+      final generatedTables = _generateTableLayout(tableInfoList);
       
       // Load existing reservations for this restaurant, time slot and scheduled date
       final reservations =
