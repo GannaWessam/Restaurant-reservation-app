@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/restaurant_model.dart';
 import '../models/reservation_model.dart';
@@ -309,6 +310,19 @@ class TableSelectionController extends GetxController {
     if (_restaurant == null || _timeSlot == null || _scheduledDate == null) return;
     if (selectedChairs.isEmpty) return;
 
+    // Final availability check in case seats were taken while confirming
+    final stillAvailable = await ensureSelectionAvailable();
+    if (!stillAvailable) {
+      Get.snackbar(
+        'Seats unavailable',
+        'Some seats were just reserved. Please pick others.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[600],
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     // Check if user is logged in
     final userId = currentUserId;
     if (userId == null) {
@@ -351,6 +365,36 @@ class TableSelectionController extends GetxController {
     
     // Clear selections
     selectedChairs.clear();
+  }
+
+  // Re-check reservations to ensure currently selected seats are still free
+  Future<bool> ensureSelectionAvailable() async {
+    if (_restaurant == null || _timeSlot == null || _scheduledDate == null) return false;
+
+    try {
+      final reservations =
+          await _reservationsCrud.getReservationsByRestaurantTimeSlotAndDate(
+        _restaurant!.name,
+        _timeSlot!,
+        _scheduledDate!,
+      );
+
+      final Set<int> bookedSeatIds = {};
+      for (var reservation in reservations) {
+        bookedSeatIds.addAll(reservation.seatIds);
+      }
+
+      final hasConflict = selectedChairs.any(bookedSeatIds.contains);
+      if (hasConflict) {
+        selectedChairs.removeWhere(bookedSeatIds.contains);
+        await loadTablesAndReservations(); // refresh UI with latest bookings
+      }
+
+      return !hasConflict;
+    } catch (e) {
+      print('Error validating seat availability: $e');
+      return false;
+    }
   }
 
   // Check if user is logged in

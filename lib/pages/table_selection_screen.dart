@@ -213,13 +213,27 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
                     child: ElevatedButton(
                       onPressed: isEmpty
                           ? null
-                          : () {
+                          : () async {
                               // Check if user is logged in before confirming reservation
                               if (!controller.isLoggedIn) {
                                 _showLoginRequiredDialog(restaurant, timeSlot, scheduledDate);
-                              } else {
-                                _confirmReservation(restaurant, timeSlot, scheduledDate);
+                                return;
                               }
+
+                              // Re-validate seats in case another user booked them meanwhile
+                              final available = await controller.ensureSelectionAvailable();
+                              if (!available) {
+                                Get.snackbar(
+                                  'Seats just got booked',
+                                  'Please select another available table.',
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: Colors.red[600],
+                                  colorText: Colors.white,
+                                );
+                                return;
+                              }
+
+                              _confirmReservation(restaurant, timeSlot, scheduledDate);
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8D6E63),

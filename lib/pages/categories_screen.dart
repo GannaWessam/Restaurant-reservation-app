@@ -59,6 +59,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget build(BuildContext context) {
     // Get user name (mock for now)
     final String userName = '';///USER NAME
+    final AuthService authService = Get.find<AuthService>();
+    final bool isLoggedIn = authService.isLoggedIn();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -98,17 +100,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                       onSelected: (value) {
                         if (value == 'reservations') {
-                          final AuthService authService = Get.find<AuthService>();
-                          if (authService.isLoggedIn()) {
+                          if (isLoggedIn) {
                             Get.toNamed('/my-reservations');
                           } else {
                             Get.toNamed('/login');
                           }
-                        } else if (value == 'signout') {
-                          // Sign out
-                          final AuthService authService = Get.find<AuthService>();
-                          authService.signOut();
-                          Get.offAllNamed('/login');
+                        } else if (value == 'auth') {
+                          if (isLoggedIn) {
+                            // Sign out and return to login
+                            authService.signOut();
+                            Get.offAllNamed('/login');
+                          } else {
+                            // Go to login when logged out
+                            Get.toNamed('/login');
+                          }
                         }
                       },
                       itemBuilder: (BuildContext context) => [
@@ -133,21 +138,21 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           ),
                         ),
                         PopupMenuItem<String>(
-                          value: 'signout',
+                          value: 'auth',
                           child: Row(
                             children: [
                               Icon(
-                                Icons.logout,
-                                color: Colors.red[600],
+                                isLoggedIn ? Icons.logout : Icons.login,
+                                color: isLoggedIn ? Colors.red[600] : Theme.of(context).colorScheme.secondary,
                                 size: 20,
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'Sign Out',
+                                isLoggedIn ? 'Sign Out' : 'Sign In',
                                 style: GoogleFonts.cairo(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.red[600],
+                                  color: isLoggedIn ? Colors.red[600] : Theme.of(context).colorScheme.secondary,
                                 ),
                               ),
                             ],
