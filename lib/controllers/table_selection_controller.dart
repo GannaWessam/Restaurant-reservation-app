@@ -45,13 +45,25 @@ class TableSelectionController extends GetxController {
     }
   }
 
-  // Parse number of tables from restaurant.tables string (e.g., "15 tables" -> 15)
+  // Parse number of tables from restaurant.tables string 
+  // Handles formats like: "15 tables" or "Table 1: 6 seats, Table 2: 5 seats, Table 3: 4 seats"
   int _parseTableCount(String tablesString) {
     try {
-      final match = RegExp(r'(\d+)').firstMatch(tablesString);
+      // Check if the format is "Table X:" (count occurrences of "Table")
+      final tableMatches = RegExp(r'Table\s+\d+', caseSensitive: false).allMatches(tablesString);
+      if (tableMatches.isNotEmpty) {
+        print('Found ${tableMatches.length} tables in: $tablesString');
+        return tableMatches.length;
+      }
+      
+      // Otherwise, try to extract number from formats like "15 tables"
+      final match = RegExp(r'(\d+)\s*tables?', caseSensitive: false).firstMatch(tablesString);
       if (match != null) {
         return int.parse(match.group(1)!);
       }
+      
+      // If nothing matches, return default
+      print('Could not parse table count from: $tablesString, using default');
       return 6; // Default fallback
     } catch (e) {
       print('Error parsing table count: $e');
@@ -63,33 +75,33 @@ class TableSelectionController extends GetxController {
   List<Map<String, dynamic>> _generateTableLayout(int tableCount) {
     final List<Map<String, dynamic>> generatedTables = [];
     
-    // Predefined layouts for different table counts
+    // Predefined layouts for different table counts with much better spacing
     final List<List<Map<String, dynamic>>> layouts = [
-      // Layout for 1-3 tables
+      // Layout for 1-3 tables (well-spaced)
       <Map<String, dynamic>>[
-        <String, dynamic>{'x': 100.0, 'y': 50.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 200.0, 'y': 50.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 150.0, 'y': 200.0, 'shape': 'round', 'size': 80.0, 'chairs': 6},
+        <String, dynamic>{'x': 50.0, 'y': 50.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
+        <String, dynamic>{'x': 50.0, 'y': 250.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
+        <String, dynamic>{'x': 50.0, 'y': 450.0, 'shape': 'round', 'size': 80.0, 'chairs': 6},
       ],
-      // Layout for 4-6 tables
+      // Layout for 4-6 tables (well-spaced)
       <Map<String, dynamic>>[
-        <String, dynamic>{'x': 20.0, 'y': 30.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 200.0, 'y': 30.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 90.0, 'y': 180.0, 'shape': 'round', 'size': 80.0, 'chairs': 8},
-        <String, dynamic>{'x': 20.0, 'y': 380.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 200.0, 'y': 380.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 70.0, 'y': 540.0, 'shape': 'rectangle', 'size': 60.0, 'width': 120.0, 'chairs': 6},
+        <String, dynamic>{'x': 40.0, 'y': 40.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
+        <String, dynamic>{'x': 240.0, 'y': 40.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
+        <String, dynamic>{'x': 130.0, 'y': 230.0, 'shape': 'round', 'size': 80.0, 'chairs': 8},
+        <String, dynamic>{'x': 40.0, 'y': 450.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
+        <String, dynamic>{'x': 240.0, 'y': 450.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
+        <String, dynamic>{'x': 100.0, 'y': 630.0, 'shape': 'rectangle', 'size': 60.0, 'width': 120.0, 'chairs': 6},
       ],
-      // Layout for 7+ tables (extend as needed)
+      // Layout for 7+ tables (well-spaced)
       <Map<String, dynamic>>[
-        <String, dynamic>{'x': 20.0, 'y': 30.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 200.0, 'y': 30.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
-        <String, dynamic>{'x': 90.0, 'y': 180.0, 'shape': 'round', 'size': 80.0, 'chairs': 8},
-        <String, dynamic>{'x': 20.0, 'y': 380.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 200.0, 'y': 380.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 70.0, 'y': 540.0, 'shape': 'rectangle', 'size': 60.0, 'width': 120.0, 'chairs': 6},
-        <String, dynamic>{'x': 300.0, 'y': 100.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
-        <String, dynamic>{'x': 300.0, 'y': 300.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
+        <String, dynamic>{'x': 40.0, 'y': 40.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
+        <String, dynamic>{'x': 250.0, 'y': 40.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
+        <String, dynamic>{'x': 140.0, 'y': 240.0, 'shape': 'round', 'size': 80.0, 'chairs': 8},
+        <String, dynamic>{'x': 40.0, 'y': 480.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
+        <String, dynamic>{'x': 250.0, 'y': 480.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
+        <String, dynamic>{'x': 110.0, 'y': 660.0, 'shape': 'rectangle', 'size': 60.0, 'width': 120.0, 'chairs': 6},
+        <String, dynamic>{'x': 380.0, 'y': 150.0, 'shape': 'round', 'size': 60.0, 'chairs': 4},
+        <String, dynamic>{'x': 380.0, 'y': 380.0, 'shape': 'square', 'size': 50.0, 'chairs': 4},
       ],
     ];
 

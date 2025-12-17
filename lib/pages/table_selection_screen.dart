@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/restaurant_model.dart';
 import '../controllers/table_selection_controller.dart';
-import '../services/auth_service.dart';
 
 class TableSelectionScreen extends GetView<TableSelectionController> {
   const TableSelectionScreen({super.key});
@@ -110,21 +109,25 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: SizedBox(
-                          height: 700,
-                          child: Stack(
-                            children: [
-                              // Tables with chairs
-                              ...controller.tables.map((table) {
-                                return Positioned(
-                                  left: table['x'] as double,
-                                  top: table['y'] as double,
-                                  child: _buildTableWithChairs(context, table),
-                                );
-                              }).toList(),
-                            ],
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: SizedBox(
+                            height: 950,
+                            width: 600,
+                            child: Stack(
+                              children: [
+                                // Tables with chairs
+                                ...controller.tables.map((table) {
+                                  return Positioned(
+                                    left: table['x'] as double,
+                                    top: table['y'] as double,
+                                    child: _buildTableWithChairs(context, table),
+                                  );
+                                }).toList(),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -324,9 +327,9 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
     final isBooked = chair['booked'] as bool;
 
     const double baseOffset = 50.0;
-    const double chairDistance = 8.0;
-    const double chairWidth = 28.0;
-    const double chairHeight = 32.0;
+    const double chairDistance = 20.0;  // Increased spacing from table
+    const double chairWidth = 32.0;     // Slightly larger chairs
+    const double chairHeight = 36.0;
 
     double getLeft() {
       final centerX = baseOffset + tableWidth / 2;
@@ -336,14 +339,14 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
           return centerX - chairWidth / 2;
         case 'top-right':
         case 'bottom-right':
-          return centerX + 20;
+          return centerX + 35;  // Increased offset for corner chairs
         case 'right':
           return baseOffset + tableWidth + chairDistance;
         case 'left':
           return baseOffset - chairDistance - chairWidth;
         case 'top-left':
         case 'bottom-left':
-          return centerX - 20 - chairWidth;
+          return centerX - 35 - chairWidth;  // Increased offset for corner chairs
         default:
           return centerX;
       }
