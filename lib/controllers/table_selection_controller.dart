@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -145,6 +146,18 @@ class TableSelectionController extends GetxController {
     }
     
     return generatedTables;
+  }
+
+  // Calculate dynamic canvas height based on generated tables
+  double get canvasHeight {
+    if (tables.isEmpty) return 700.0;
+    double maxHeight = 700.0;
+    for (final table in tables) {
+      final y = table['y'] as double;
+      final size = table['size'] as double;
+      maxHeight = math.max(maxHeight, y + size + 140); // padding for chairs and spacing
+    }
+    return maxHeight;
   }
 
   // Generate chairs for a table based on seat count using angular distribution

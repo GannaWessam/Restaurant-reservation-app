@@ -114,22 +114,25 @@ class TableSelectionScreen extends GetView<TableSelectionController> {
                         scrollDirection: Axis.horizontal,
                         child: Padding(
                           padding: const EdgeInsets.all(24.0),
-                          child: SizedBox(
-                            height: 950,
-                            width: 600,
-                            child: Stack(
-                              children: [
-                                // Tables with chairs
-                                ...controller.tables.map((table) {
-                                  return Positioned(
-                                    left: table['x'] as double,
-                                    top: table['y'] as double,
-                                    child: _buildTableWithChairs(context, table),
-                                  );
-                                }).toList(),
-                              ],
-                            ),
-                          ),
+                          child: Obx(() {
+                            final canvasHeight = controller.canvasHeight;
+                            return SizedBox(
+                              height: canvasHeight,
+                              width: 600,
+                              child: Stack(
+                                children: [
+                                  // Tables with chairs
+                                  ...controller.tables.map((table) {
+                                    return Positioned(
+                                      left: table['x'] as double,
+                                      top: table['y'] as double,
+                                      child: _buildTableWithChairs(context, table),
+                                    );
+                                  }).toList(),
+                                ],
+                              ),
+                            );
+                          }),
                         ),
                       ),
                     ),
